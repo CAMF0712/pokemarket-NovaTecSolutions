@@ -6,81 +6,49 @@
 <?import javafx.scene.text.Font?>
 
 <VBox alignment="CENTER"
-      prefHeight="600.0"
-      prefWidth="900.0"
-      spacing="20"
+      prefHeight="600"
+      prefWidth="900"
+      spacing="15"
       xmlns="http://javafx.com/javafx/24"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.example.LoginController"
       stylesheets="@style.css">
 
     <padding>
-        <Insets top="40" right="40" bottom="40" left="40"/>
+        <Insets top="30" right="30" bottom="30" left="30"/>
     </padding>
 
-    <!-- LOGIN CARD -->
+    <Label text="PokéMarket">
+        <font>
+            <Font size="32"/>
+        </font>
+    </Label>
 
-    <VBox alignment="CENTER"
-          spacing="18"
-          prefWidth="380"
-          maxWidth="380"
-          styleClass="form-container">
+    <Label text="Login">
+        <font>
+            <Font size="18"/>
+        </font>
+    </Label>
 
-        <padding>
-            <Insets top="30" right="30" bottom="30" left="30"/>
-        </padding>
+    <VBox spacing="10" maxWidth="350">
 
-        <!-- TITLE -->
+        <Label text="Username"/>
 
-        <Label text="PokéGrading"
-               styleClass="title-label">
+        <TextField fx:id="usernameField"
+                   promptText="Enter username"/>
 
-            <font>
-                <Font size="34"/>
-            </font>
+        <Label text="Password"/>
 
-        </Label>
-
-        <Label text="Login to continue"
-               styleClass="subtitle-label"/>
-
-        <!-- EMAIL -->
-
-        <VBox spacing="6" maxWidth="320">
-
-            <Label text="Email"
-                   styleClass="form-label"/>
-
-            <TextField fx:id="emailField"
-                       promptText="Enter your email"
-                       prefHeight="42"/>
-
-        </VBox>
-
-        <!-- PASSWORD -->
-
-        <VBox spacing="6" maxWidth="320">
-
-            <Label text="Password"
-                   styleClass="form-label"/>
-
-            <PasswordField fx:id="passwordField"
-                           promptText="Enter your password"
-                           prefHeight="42"/>
-
-        </VBox>
-
-        <!-- LOGIN BUTTON -->
+        <PasswordField fx:id="passwordField"
+                       promptText="Enter password"/>
 
         <Button text="Login"
-                prefWidth="320"
-                prefHeight="45"
-                onAction="#login"/>
+                maxWidth="Infinity"
+                prefHeight="40"
+                onAction="#loginUser"/>
 
-        <!-- CREATE ACCOUNT -->
-
-        <Hyperlink text="Don't have an account? Create one"
-                   onAction="#goToRegister"/>
+        <Hyperlink text="Create Account"
+                   onAction="#openRegister"/>
 
     </VBox>
 

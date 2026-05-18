@@ -1,91 +1,88 @@
 package org.example;
 
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 public class LoginController {
 
-    /*
-     * LOGIN
-     * For now it directly opens Add Card view
-     */
-    public void login(ActionEvent event) {
+    @FXML
+    private TextField usernameField;
 
-        try {
+    @FXML
+    private PasswordField passwordField;
 
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource("/org/example/add-card-view.fxml")
-                    );
+    private final UserService userService = new UserService();
 
-            Parent root = loader.load();
+    @FXML
+    public void loginUser(ActionEvent event) {
 
-            Stage stage =
-                    (Stage) ((javafx.scene.Node) event.getSource())
-                            .getScene()
-                            .getWindow();
+        String username = usernameField.getText();
+        String password = passwordField.getText();
 
-            Scene scene = new Scene(root);
+        if (!userService.userExists(username)) {
 
-            scene.getStylesheets().add(
-                    getClass()
-                            .getResource("/org/example/style.css")
-                            .toExternalForm()
-            );
+            showAlert("User not found",
+                    "The user does not exist.\nPlease create an account.");
 
-            stage.setTitle("PokéMarket - Add Card");
+            return;
+        }
 
-            stage.setScene(scene);
+        boolean valid = userService.validateLogin(username, password);
 
-            stage.show();
+        if (valid) {
 
-        } catch (Exception e) {
+            showAlert("Login Successful",
+                    "Welcome " + username);
 
-            e.printStackTrace();
+            openWindow("add-card-view.fxml", event);
 
+        } else {
+
+            showAlert("Invalid Password",
+                    "Incorrect password.");
         }
     }
 
-    /*
-     * GO TO REGISTER VIEW
-     */
-    public void goToRegister(ActionEvent event) {
+    @FXML
+    public void openRegister(ActionEvent event) {
+
+        openWindow("register-view.fxml", event);
+    }
+
+    private void openWindow(String file, ActionEvent event) {
 
         try {
 
             FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource("/org/example/register-view.fxml")
-                    );
+                    new FXMLLoader(FxApp.class.getResource("/org/example/" + file));
 
-            Parent root = loader.load();
+            Scene scene = new Scene(loader.load());
 
             Stage stage =
-                    (Stage) ((javafx.scene.Node) event.getSource())
+                    (Stage)((Control)event.getSource())
                             .getScene()
                             .getWindow();
 
-            Scene scene = new Scene(root);
-
-            scene.getStylesheets().add(
-                    getClass()
-                            .getResource("/org/example/style.css")
-                            .toExternalForm()
-            );
-
-            stage.setTitle("PokéMarket - Register Account");
-
             stage.setScene(scene);
-
             stage.show();
 
         } catch (Exception e) {
-
             e.printStackTrace();
-
         }
+    }
+
+    private void showAlert(String title, String content) {
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+
+        alert.showAndWait();
     }
 }
