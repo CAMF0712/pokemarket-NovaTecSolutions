@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER"
+      prefHeight="600.0"
+      prefWidth="900.0"
+      spacing="30"
+      xmlns="http://javafx.com/javafx/24"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.HomeController"
+      stylesheets="@style.css">
+
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+
+    <!-- TITLE -->
+
+    <Label text="PokéGrading"
+           styleClass="title-label">
+
+        <font>
+            <Font size="34"/>
+        </font>
+
+    </Label>
+
+    <Label text="Main Features Dashboard"
+           styleClass="subtitle-label"/>
+
+    <!-- CARDS CONTAINER -->
+
+    <HBox alignment="CENTER"
+          spacing="40">
+
+        <!-- REGISTER CARD -->
+
+        <VBox alignment="TOP_CENTER"
+              spacing="20"
+              prefWidth="320"
+              prefHeight="320"
+              maxWidth="320"
+              styleClass="form-container">
+
+            <padding>
+                <Insets top="25" right="25" bottom="25" left="25"/>
+            </padding>
+
+            <Label text="Register Account"
+                   wrapText="true"
+                   maxWidth="250"
+                   styleClass="title-label">
+
+                <font>
+                    <Font size="24"/>
+                </font>
+
+            </Label>
+
+            <Label text="Create new user accounts with email and password validation."
+                   wrapText="true"
+                   maxWidth="250"
+                   styleClass="subtitle-label"/>
+
+            <Button text="Open Register View"
+                    prefWidth="220"
+                    prefHeight="45"
+                    onAction="#openRegisterView"/>
+
+        </VBox>
+
+        <!-- ADD CARD -->
+
+        <VBox alignment="TOP_CENTER"
+              spacing="20"
+              prefWidth="320"
+              prefHeight="320"
+              maxWidth="320"
+              styleClass="form-container">
+
+            <padding>
+                <Insets top="25" right="25" bottom="25" left="25"/>
+            </padding>
+
+            <Label text="Add Card"
+                   wrapText="true"
+                   maxWidth="250"
+                   styleClass="title-label">
+
+                <font>
+                    <Font size="24"/>
+                </font>
+
+            </Label>
+
+            <Label text="Register Pokémon cards with attributes and image validation."
+                   wrapText="true"
+                   maxWidth="250"
+                   styleClass="subtitle-label"/>
+
+            <Button text="Open Catalog View"
+                    prefWidth="220"
+                    prefHeight="45"
+                    onAction="#openAddCardView"/>
+
+        </VBox>
+
+    </HBox>
+
+</VBox>

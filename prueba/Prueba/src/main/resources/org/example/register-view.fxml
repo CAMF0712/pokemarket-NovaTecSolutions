@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="CENTER"
+      prefHeight="600.0"
+      prefWidth="900.0"
+      spacing="15"
+      xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.RegisterController"
+      stylesheets="@style.css">
+
+    <padding>
+        <Insets bottom="30" left="30" right="30" top="30" />
+    </padding>
+
+    <Label text="PokéGrading">
+        <font>
+            <Font size="32" />
+        </font>
+    </Label>
+
+    <Label text="Create your account">
+        <font>
+            <Font size="18" />
+        </font>
+    </Label>
+
+    <VBox maxWidth="350" spacing="10">
+
+        <Label text="Username" />
+        <TextField fx:id="usernameField" promptText="Enter username" />
+
+        <Label text="Email" />
+        <TextField fx:id="emailField" promptText="Enter email" />
+
+        <Label text="Password" />
+        <PasswordField fx:id="passwordField" promptText="Enter password" />
+
+        <Label text="Confirm Password" />
+        <PasswordField fx:id="confirmPasswordField" promptText="Confirm password" />
+
+        <Button maxWidth="Infinity" onAction="#registerUser" prefHeight="40" text="Register Account" />
+
+        <Hyperlink text="Already have an account? Login" />
+
+    </VBox>
+
+</VBox>

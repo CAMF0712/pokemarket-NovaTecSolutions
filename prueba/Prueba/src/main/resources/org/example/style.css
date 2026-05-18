@@ -1,0 +1,266 @@
+.root {
+    -fx-background-color: linear-gradient(to bottom right, #1f2125, #2d3138);
+    -fx-font-family: "Segoe UI";
+}
+
+/* =========================================================
+   GLOBAL LABELS
+========================================================= */
+
+.label {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+}
+
+/* =========================================================
+   TITLES
+========================================================= */
+
+.title-label {
+    -fx-text-fill: white;
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+}
+
+.subtitle-label {
+    -fx-text-fill: #d9d9d9;
+    -fx-font-size: 18px;
+    -fx-font-weight: 500;
+}
+
+/* =========================================================
+   FORM LABELS
+========================================================= */
+
+.form-label {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* =========================================================
+   TEXTFIELDS & PASSWORD FIELDS
+========================================================= */
+
+.text-field,
+.password-field {
+
+    -fx-background-color: #3a3f47;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #c2c7cf;
+
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+
+    -fx-border-color: #4a4f57;
+    -fx-border-width: 2;
+
+    -fx-padding: 10 12 10 12;
+
+    -fx-font-size: 13px;
+}
+
+/* Hover effect */
+
+.text-field:hover,
+.password-field:hover {
+
+    -fx-background-color: #454b55;
+    -fx-border-color: #8791a0;
+}
+
+/* Focused effect */
+
+.text-field:focused,
+.password-field:focused {
+
+    -fx-background-color: #515866;
+    -fx-border-color: #aeb8c7;
+
+    -fx-effect: dropshadow(
+            gaussian,
+            rgba(255,255,255,0.18),
+            12,
+            0.2,
+            0,
+            0
+    );
+}
+
+/* =========================================================
+   COMBOBOX
+========================================================= */
+
+.combo-box {
+
+    -fx-background-color: #3a3f47;
+
+    -fx-background-radius: 10;
+
+    -fx-border-color: #4a4f57;
+    -fx-border-radius: 10;
+    -fx-border-width: 2;
+
+    -fx-font-size: 13px;
+}
+
+/* Combo text */
+
+.combo-box .list-cell {
+
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+}
+
+/* Hover */
+
+.combo-box:hover {
+
+    -fx-background-color: #454b55;
+    -fx-border-color: #8791a0;
+}
+
+/* Focused */
+
+.combo-box:focused {
+
+    -fx-background-color: #515866;
+    -fx-border-color: #aeb8c7;
+
+    -fx-effect: dropshadow(
+            gaussian,
+            rgba(255,255,255,0.18),
+            12,
+            0.2,
+            0,
+            0
+    );
+}
+
+/* Dropdown */
+
+.combo-box-popup .list-view {
+
+    -fx-background-color: #2d3138;
+    -fx-border-color: #5a6068;
+}
+
+/* Dropdown cells */
+
+.combo-box-popup .list-cell {
+
+    -fx-background-color: #2d3138;
+    -fx-text-fill: white;
+}
+
+/* Hover dropdown */
+
+.combo-box-popup .list-cell:hover {
+
+    -fx-background-color: #515866;
+}
+
+/* Selected dropdown */
+
+.combo-box-popup .list-cell:selected {
+
+    -fx-background-color: #6f7b8c;
+    -fx-text-fill: white;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.button {
+
+    -fx-background-color: #6f7785;
+    -fx-text-fill: white;
+
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+
+    -fx-background-radius: 12;
+
+    -fx-padding: 12 22 12 22;
+
+    -fx-cursor: hand;
+}
+
+/* Hover */
+
+.button:hover {
+
+    -fx-background-color: #8791a0;
+
+    -fx-effect: dropshadow(
+            gaussian,
+            rgba(255,255,255,0.15),
+            12,
+            0.2,
+            0,
+            0
+    );
+}
+
+/* Pressed */
+
+.button:pressed {
+
+    -fx-background-color: #5b626f;
+}
+
+/* =========================================================
+   HYPERLINK
+========================================================= */
+
+.hyperlink {
+
+    -fx-text-fill: #d7dce4;
+    -fx-font-size: 13px;
+}
+
+.hyperlink:hover {
+
+    -fx-text-fill: white;
+}
+
+/* =========================================================
+   SCROLLPANE
+========================================================= */
+
+.scroll-pane {
+
+    -fx-background: #1f2125;
+    -fx-background-color: #1f2125;
+}
+
+.scroll-pane > .viewport {
+
+    -fx-background-color: transparent;
+}
+
+/* =========================================================
+   FORM CONTAINER EFFECT
+========================================================= */
+
+.form-container {
+
+    -fx-background-color: rgba(255,255,255,0.04);
+
+    -fx-background-radius: 18;
+
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-radius: 18;
+
+    -fx-padding: 30;
+
+    -fx-effect: dropshadow(
+            gaussian,
+            rgba(0,0,0,0.35),
+            20,
+            0.2,
+            0,
+            4
+    );
+}

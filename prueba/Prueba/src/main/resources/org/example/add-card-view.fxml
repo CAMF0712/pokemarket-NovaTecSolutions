@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<ScrollPane fitToWidth="true"
+            xmlns="http://javafx.com/javafx/24"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.AddCardController"
+            stylesheets="@style.css">
+
+    <content>
+
+        <VBox alignment="TOP_CENTER"
+              prefWidth="900.0"
+              spacing="15">
+
+            <padding>
+                <Insets top="30" right="30" bottom="30" left="30"/>
+            </padding>
+
+            <Label text="PokéGrading">
+                <font>
+                    <Font size="32" />
+                </font>
+            </Label>
+
+            <Label text="Add Card to Catalog">
+                <font>
+                    <Font size="18" />
+                </font>
+            </Label>
+
+            <GridPane hgap="10" vgap="12" maxWidth="500">
+
+                <Label text="Card Name" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="cardNameField"
+                           promptText="Enter card name"
+                           GridPane.rowIndex="0"
+                           GridPane.columnIndex="1"/>
+
+                <Label text="Set" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextField fx:id="setField"
+                           promptText="Enter set"
+                           GridPane.rowIndex="1"
+                           GridPane.columnIndex="1"/>
+
+                <Label text="Card Number" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <TextField fx:id="numberField"
+                           promptText="Enter number"
+                           GridPane.rowIndex="2"
+                           GridPane.columnIndex="1"/>
+
+                <Label text="Edition" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="editionCombo"
+                          GridPane.rowIndex="3"
+                          GridPane.columnIndex="1" />
+
+                <Label text="Language" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="languageCombo"
+                          GridPane.rowIndex="4"
+                          GridPane.columnIndex="1" />
+
+                <Label text="Finish" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="finishCombo"
+                          GridPane.rowIndex="5"
+                          GridPane.columnIndex="1" />
+
+                <Label text="Upload Image" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                <Button text="Choose File"
+                        GridPane.rowIndex="6"
+                        GridPane.columnIndex="1" />
+
+            </GridPane>
+
+            <Button text="Add Card"
+                    prefWidth="200"
+                    prefHeight="40" />
+
+        </VBox>
+
+    </content>
+
+</ScrollPane>
