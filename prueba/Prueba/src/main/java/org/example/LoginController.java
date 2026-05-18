@@ -6,25 +6,27 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class HomeController {
+public class LoginController {
 
     /*
-     * Open Register Account View
+     * LOGIN
+     * For now it directly opens Add Card view
      */
-    public void openRegisterView(ActionEvent event) {
+    public void login(ActionEvent event) {
 
         try {
 
             FXMLLoader loader =
                     new FXMLLoader(
-                            getClass().getResource("/org/example/register-view.fxml")
+                            getClass().getResource("/org/example/add-card-view.fxml")
                     );
 
             Parent root = loader.load();
 
-            Stage stage = (Stage) ((javafx.scene.Node) event.getSource())
-                    .getScene()
-                    .getWindow();
+            Stage stage =
+                    (Stage) ((javafx.scene.Node) event.getSource())
+                            .getScene()
+                            .getWindow();
 
             Scene scene = new Scene(root);
 
@@ -34,7 +36,7 @@ public class HomeController {
                             .toExternalForm()
             );
 
-            stage.setTitle("PokéMarket - Register Account");
+            stage.setTitle("PokéMarket - Add Card");
 
             stage.setScene(scene);
 
@@ -48,22 +50,23 @@ public class HomeController {
     }
 
     /*
-     * Open Add Card View
+     * GO TO REGISTER VIEW
      */
-    public void openAddCardView(ActionEvent event) {
+    public void goToRegister(ActionEvent event) {
 
         try {
 
             FXMLLoader loader =
                     new FXMLLoader(
-                            getClass().getResource("/org/example/add-card-view.fxml")
+                            getClass().getResource("/org/example/register-view.fxml")
                     );
 
             Parent root = loader.load();
 
-            Stage stage = (Stage) ((javafx.scene.Node) event.getSource())
-                    .getScene()
-                    .getWindow();
+            Stage stage =
+                    (Stage) ((javafx.scene.Node) event.getSource())
+                            .getScene()
+                            .getWindow();
 
             Scene scene = new Scene(root);
 
@@ -73,7 +76,7 @@ public class HomeController {
                             .toExternalForm()
             );
 
-            stage.setTitle("PokéMarket - Add Card");
+            stage.setTitle("PokéMarket - Register Account");
 
             stage.setScene(scene);
 
