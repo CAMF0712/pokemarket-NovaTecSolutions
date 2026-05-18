@@ -12,7 +12,7 @@ import java.util.List;
 
 public class UserService {
 
-    private static final String FILE_PATH = "users.json";
+    private static final String FILE_PATH = "prueba/users.json";
 
     private final Gson gson = new Gson();
 
