@@ -106,7 +106,7 @@ function Login({ setUser }) {
         <div className={styles.loginWrapper}>
             <div className={styles.wrapper}>
                 <form onSubmit={handleLogin}>
-                    <h1 className={styles.title}>GymTEC</h1>
+                    <h1 className={styles.title}>PokeGrading</h1>
 
                     <div className={styles.inputBox}>
                         <input type="text" placeholder="Usuario" value={username} onChange={(e) => setUsername(e.target.value)} required />
