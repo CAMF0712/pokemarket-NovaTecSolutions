@@ -1,7 +1,10 @@
-﻿using PokeGrading.Data_input_models;
+﻿using Dapper;
+using Microsoft.AspNetCore.Mvc;
+using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Utilities;
-using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace PokeGrading.Controllers
 {
@@ -16,72 +19,94 @@ namespace PokeGrading.Controllers
             _databaseService = databaseService;
         }
 
-
-        /// <summary>
-        /// Registra un nuevo cliente en el sistema.
-        /// </summary>
-        /// <param name="input">Objeto Data_input_register_client con los datos del cliente a registrar.</param>
-        /// <returns>
-        /// Data_response con los datos del cliente registrado.
-        /// - status: true si el registro fue exitoso.
-        /// - data: Data_output_register_client con la información del cliente registrado.
-        /// </returns>
-        /// <remarks>
-        /// Se espera que el input contenga toda la información necesaria para el registro.
-        /// </remarks>
-        [HttpPost("register_client")]
-        public ActionResult<Data_response<Data_output_register_client>> RegisterClient([FromBody] Data_input_register_client input)
+        [HttpPost("register")]
+        public ActionResult<Data_response<Data_output_register_user>>
+            Register(Data_input_register_user input)
         {
-            var parameters = new Dictionary<string, object>
+            if (!input.accept_disclosure)
+                return BadRequest("Disclosure must be accepted.");
+
+            if (!Regex.IsMatch(input.email,
+                @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                return BadRequest("Invalid email.");
+
+            if (!Regex.IsMatch(input.password,
+                @"^(?=.*[A-Z])(?=.*\d).{8,}$"))
+                return BadRequest("Password does not meet requirements.");
+
+            string[] validCountries =
             {
-                { "in_client_id", input.id_number },
-                { "in_first_name", input.first_name },
-                { "in_user_name", input.user_name },
-                { "in_last_name_1", input.last_name_1 },
-                { "in_last_name_2", input.last_name_2 },
-                { "in_birth_date", input.birth_date },
-                { "in_weight", input.weight },
-                { "in_address", input.address },
-                { "in_email", input.email },
-                { "in_password", Encriptador.ObtenerHashMD5(input.password) },
-                { "in_phone", input.phone }
+                "CR","PA","MX","CO","CL","AR"
             };
 
-            try
-            {
-                _databaseService.ExecuteFunction("SELECT sp_register_client(@in_client_id, @in_first_name, @in_user_name, @in_last_name_1, @in_last_name_2, @in_birth_date, @in_weight, @in_address, @in_email, @in_password, @in_phone)", parameters);
+            if (!validCountries.Contains(input.country))
+                return BadRequest("Country not supported.");
 
-                var data_Output = new Data_output_register_client
+            var existingUser =
+                _databaseService.QuerySingleOrDefault<dynamic>(
+                    "SELECT * FROM Users WHERE Email=@Email",
+                    new Dictionary<string, object>
+                    {
+                        {"Email", input.email}
+                    });
+
+            if (existingUser != null)
+                return BadRequest("Email already exists.");
+
+            Guid userId = Guid.NewGuid();
+
+            string hash =
+                PasswordService.HashPassword(input.password);
+
+            _databaseService.ExecuteNonQuery(
+                @"INSERT INTO Users
+                (
+                    UserId,
+                    Email,
+                    Alias,
+                    PasswordHash,
+                    Country,
+                    PreferredLanguage,
+                    Role,
+                    Active,
+                    CreatedAt,
+                    LastLogin
+                )
+                VALUES
+                (
+                    @UserId,
+                    @Email,
+                    @Alias,
+                    @PasswordHash,
+                    @Country,
+                    @Language,
+                    'SUBMITTER',
+                    1,
+                    GETDATE(),
+                    NULL
+                )",
+                new Dictionary<string, object>
                 {
-                    id_number = input.id_number.ToString(),
-                    first_name = input.first_name,
-                    user_name = input.user_name,
-                    last_name_1 = input.last_name_1,
-                    last_name_2 = input.last_name_2,
-                    birth_date = input.birth_date,
-                    weight = input.weight,
-                    imc = input.imc, // Este se sigue enviando aunque no se almacene
-                    address = input.address,
+                    {"UserId",userId},
+                    {"Email",input.email},
+                    {"Alias",input.alias},
+                    {"PasswordHash",hash},
+                    {"Country",input.country},
+                    {"Language",input.preferred_language}
+                });
+
+            return Ok(new Data_response<Data_output_register_user>
+            {
+                status = true,
+                data = new Data_output_register_user
+                {
+                    user_id = userId,
                     email = input.email,
-                    role = input.role,
-                    phone = input.phone
-                };
-
-                return Ok(new Data_response<Data_output_register_client>
-                {
-                    status = true,
-                    data = data_Output
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    status = false,
-                    error = ex.Message,
-                    inner = ex.InnerException?.Message
-                });
-            }
+                    alias = input.alias,
+                    role = "SUBMITTER",
+                    created_at = DateTime.Now
+                }
+            });
         }
     }
 }
