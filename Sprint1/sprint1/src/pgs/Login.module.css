@@ -57,6 +57,20 @@
     transform: translateX(5%);
 }
 
+.inputBox select {
+    width: 70%;
+    height: 100%;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,.2);
+    border-radius: 30px;
+    color: white;
+    padding: 2px 12px;
+}
+
+.inputBox select option {
+    color: black;
+}
+
 .icon {
     position: absolute;
     top: 50%;
@@ -122,4 +136,57 @@
     color: white;
     font-size: 14px;
     cursor: pointer;
+}
+
+.tabSelector {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tabSelector span {
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.2s ease;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+.tabSelector span:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.tabSelector .active {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.formGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+}
+
+.column {
+    flex: 1;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 0rem;
+}
+
+.formActions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 20px;
+}
+
+.wrapper {
+    width: 600px;
 }
