@@ -1,16 +1,15 @@
 ﻿using Dapper;
-using Microsoft.Data.SqlClient;
 
 namespace PokeGrading.Utilities
 {
     public class DatabaseService
     {
-        private readonly string _connectionString;
+        private readonly SQL_connection _sqlConnection;
 
-        public DatabaseService(IConfiguration configuration)
+        public DatabaseService(
+            SQL_connection sqlConnection)
         {
-            _connectionString =
-                configuration.GetConnectionString("DefaultConnection");
+            _sqlConnection = sqlConnection;
         }
 
         public T QuerySingle<T>(
@@ -18,7 +17,7 @@ namespace PokeGrading.Utilities
             Dictionary<string, object> parameters)
         {
             using var conn =
-                new SqlConnection(_connectionString);
+                _sqlConnection.GetConnection();
 
             conn.Open();
 
@@ -32,7 +31,7 @@ namespace PokeGrading.Utilities
             Dictionary<string, object> parameters)
         {
             using var conn =
-                new SqlConnection(_connectionString);
+                _sqlConnection.GetConnection();
 
             conn.Open();
 
@@ -46,7 +45,7 @@ namespace PokeGrading.Utilities
             Dictionary<string, object> parameters)
         {
             using var conn =
-                new SqlConnection(_connectionString);
+                _sqlConnection.GetConnection();
 
             conn.Open();
 
@@ -60,7 +59,7 @@ namespace PokeGrading.Utilities
             Dictionary<string, object> parameters)
         {
             using var conn =
-                new SqlConnection(_connectionString);
+                _sqlConnection.GetConnection();
 
             conn.Open();
 
@@ -74,7 +73,7 @@ namespace PokeGrading.Utilities
             Dictionary<string, object> parameters)
         {
             using var conn =
-                new SqlConnection(_connectionString);
+                _sqlConnection.GetConnection();
 
             conn.Open();
 
