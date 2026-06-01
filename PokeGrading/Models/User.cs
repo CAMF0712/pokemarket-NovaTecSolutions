@@ -4,6 +4,8 @@ namespace PokeGrading.Models
     {
         public Guid UserId { get; set; }
 
+        public int RoleId { get; set; }
+
         public string Email { get; set; }
 
         public string Alias { get; set; }
@@ -14,7 +16,7 @@ namespace PokeGrading.Models
 
         public string PreferredLanguage { get; set; }
 
-        public string Role { get; set; }
+        public string Status { get; set; }
 
         public bool Active { get; set; }
 

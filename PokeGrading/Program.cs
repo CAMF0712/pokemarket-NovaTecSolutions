@@ -1,7 +1,11 @@
+using PokeGrading.Utilities;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Services
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<DatabaseService>();
 
 builder.Services.AddCors(options =>
 {
@@ -24,7 +28,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure HTTP pipeline
+// HTTP pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
