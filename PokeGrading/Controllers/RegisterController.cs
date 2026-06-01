@@ -2,7 +2,6 @@
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Utilities;
-using PokeGrading.Models;
 using System.Text.RegularExpressions;
 
 namespace PokeGrading.Controllers
@@ -11,6 +10,13 @@ namespace PokeGrading.Controllers
     [Route("[controller]")]
     public class RegisterController : ControllerBase
     {
+        private readonly DatabaseService _database;
+
+        public RegisterController(DatabaseService database)
+        {
+            _database = database;
+        }
+
         [HttpPost("register")]
         public ActionResult<Data_response<Data_output_register_user>>
             Register([FromBody] Data_input_register_user input)
@@ -113,11 +119,14 @@ namespace PokeGrading.Controllers
             //-----------------------------------
 
             var existingUser =
-                FakeDatabase.Users
-                    .FirstOrDefault(
-                        u =>
-                        u.Email.ToLower() ==
-                        input.email.ToLower());
+                _database.QuerySingleOrDefault<Guid?>(
+                    @"SELECT user_id
+                      FROM USERS
+                      WHERE LOWER(email) = LOWER(@email)",
+                    new Dictionary<string, object>
+                    {
+                        { "email", input.email }
+                    });
 
             if (existingUser != null)
             {
@@ -138,47 +147,62 @@ namespace PokeGrading.Controllers
                 PasswordService.HashPassword(
                     input.password);
 
-            var newUser =
-                new User
+            string language =
+                input.preferred_language
+                     .ToUpper();
+
+            string sql =
+            @"
+                INSERT INTO USERS
+                (
+                    user_id,
+                    role_id,
+                    email,
+                    alias,
+                    password_hash,
+                    country,
+                    preferred_language,
+                    status,
+                    active,
+                    created_at
+                )
+                VALUES
+                (
+                    @user_id,
+                    @role_id,
+                    @email,
+                    @alias,
+                    @password_hash,
+                    @country,
+                    @preferred_language,
+                    @status,
+                    @active,
+                    @created_at
+                )
+            ";
+
+            _database.ExecuteNonQuery(
+                sql,
+                new Dictionary<string, object>
                 {
-                    UserId = userId,
-                    Email = input.email,
-                    Alias = input.alias,
-                    PasswordHash = passwordHash,
-                    Country = input.country,
-                    PreferredLanguage =
-                        input.preferred_language,
-
-                    Role = "SUBMITTER",
-
-                    Active = true,
-
-                    CreatedAt =
-                        DateTime.UtcNow,
-
-                    LastLogin = null
-                };
-
-            FakeDatabase.Users.Add(newUser);
-
-            //-----------------------------------
-            // TODO Database
-            //-----------------------------------
-
-            // TODO:
-            // Replace FakeDatabase.Users.Add(...)
-            // with SQL Server persistence
-            // through Dapper.
+                    { "user_id", userId },
+                    { "role_id", 1 }, // USER
+                    { "email", input.email },
+                    { "alias", input.alias },
+                    { "password_hash", passwordHash },
+                    { "country", input.country },
+                    { "preferred_language", language },
+                    { "status", "ACTIVE" },
+                    { "active", true },
+                    { "created_at", DateTime.UtcNow }
+                });
 
             //-----------------------------------
             // Response
             //-----------------------------------
 
             return Ok(
-                new Data_response
-                <
-                    Data_output_register_user
-                >
+                new Data_response<Data_output_register_user>
                 {
                     status = true,
 
@@ -194,7 +218,7 @@ namespace PokeGrading.Controllers
                                 input.alias,
 
                             role =
-                                "SUBMITTER",
+                                "USER",
 
                             created_at =
                                 DateTime.UtcNow

@@ -539,3 +539,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 .env.local
+PokeGrading/appsettings.json
+PokeGrading/appsettings.Development.json
