@@ -2,6 +2,7 @@
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Utilities;
+using PokeGrading.Models;
 
 namespace PokeGrading.Controllers
 {
@@ -9,58 +10,58 @@ namespace PokeGrading.Controllers
     [Route("[controller]")]
     public class LoginController : ControllerBase
     {
-        private readonly DatabaseService _databaseService;
-
-        public LoginController(DatabaseService databaseService)
-        {
-            _databaseService = databaseService;
-        }
-
         [HttpPost("login")]
         public ActionResult<Data_response<Data_output_login>>
-            Login(Data_input_login input)
+            Login([FromBody] Data_input_login input)
         {
+            string passwordHash =
+                PasswordService.HashPassword(
+                    input.password);
+
             var user =
-                _databaseService.QuerySingleOrDefault<dynamic>(
-                @"SELECT *
-                  FROM Users
-                  WHERE Email=@Email",
-                new Dictionary<string, object>
-                {
-                    {"Email",input.email}
-                });
+                FakeDatabase.Users
+                    .FirstOrDefault(u =>
+                        u.Email.ToLower() ==
+                        input.email.ToLower());
 
             if (user == null)
-                return Unauthorized();
-
-            bool valid =
-                PasswordService.VerifyPassword(
-                    input.password,
-                    user.PasswordHash);
-
-            if (!valid)
-                return Unauthorized();
-
-            _databaseService.ExecuteNonQuery(
-                @"UPDATE Users
-                  SET LastLogin = GETDATE()
-                  WHERE UserId=@UserId",
-                new Dictionary<string, object>
-                {
-                    {"UserId", user.UserId}
-                });
-
-            return Ok(new Data_response<Data_output_login>
             {
-                status = true,
-                data = new Data_output_login
+                return Unauthorized(new
                 {
-                    user_id = user.UserId,
-                    email = user.Email,
-                    alias = user.Alias,
-                    role = user.Role
-                }
-            });
+                    field = "email",
+                    message = "User not found."
+                });
+            }
+
+            if (user.PasswordHash != passwordHash)
+            {
+                return Unauthorized(new
+                {
+                    field = "password",
+                    message = "Invalid password."
+                });
+            }
+
+            user.LastLogin =
+                DateTime.UtcNow;
+
+            // TODO:
+            // Persist LastLogin in SQL Server
+            // when migrating to Dapper.
+
+            return Ok(
+                new Data_response<Data_output_login>
+                {
+                    status = true,
+                    data =
+                        new Data_output_login
+                        {
+                            user_id = user.UserId,
+                            email = user.Email,
+                            alias = user.Alias,
+                            role = user.Role
+                        }
+                });
         }
     }
 }

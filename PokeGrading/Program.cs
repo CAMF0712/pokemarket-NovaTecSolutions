@@ -1,8 +1,5 @@
-using PokeGrading.Utilities;
 var builder = WebApplication.CreateBuilder(args);
 
-
-builder.Services.AddScoped<DatabaseService>();
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -12,7 +9,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins(
-                    "https://localhost:3000"    // Para desarrollo local
+                    "http://localhost:3000",
+                    "https://localhost:3000"
                   )
                   .AllowAnyHeader()
                   .AllowAnyMethod()
@@ -20,16 +18,13 @@ builder.Services.AddCors(options =>
         });
 });
 
-
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure HTTP pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

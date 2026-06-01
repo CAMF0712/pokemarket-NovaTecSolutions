@@ -190,3 +190,12 @@
 .wrapper {
     width: 600px;
 }
+
+.errorText {
+    display: block;
+    color: #ffb3b3;
+    font-size: 12px;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    text-align: center;
+}

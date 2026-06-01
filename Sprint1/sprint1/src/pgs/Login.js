@@ -6,7 +6,9 @@ import axios from "axios";
 import styles from './Login.module.css';
 
 function Login({ setUser }) {
-    const [mode, setMode] = useState("login"); // "login" o "registro"
+
+    const [mode, setMode] = useState("login");
+
     const [form, setForm] = useState({
         email: "",
         password: "",
@@ -16,53 +18,45 @@ function Login({ setUser }) {
         preferred_language: "es",
         accept_disclosure: false
     });
+
+    const [fieldErrors, setFieldErrors] = useState({});
+
     const [showPassword, setShowPassword] = useState(false);
+
     const navigate = useNavigate();
 
-    const handleChange = e => {
-        const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+    const handleChange = (e) => {
+
+        const { name, value, type, checked } = e.target;
+
+        setForm(prev => ({
+            ...prev,
+            [name]: type === "checkbox"
+                ? checked
+                : value
+        }));
+
+        setFieldErrors(prev => ({
+            ...prev,
+            [name]: ""
+        }));
     };
 
     const handleLogin = async (e) => {
+
         e.preventDefault();
 
-        // Logins locales de prueba
-        if (form.username === "admin" && form.password === "admin123") {
-            const adminUser = { nombre: "Admin", usuario: "admin", contrasena: "admin123", rol: "Admin" };
-            setUser(adminUser);
-            localStorage.setItem("usuario_actual", JSON.stringify(adminUser));
-            navigate("/admin");
-            return;
-        }
-
-        if (form.username === "instructor" && form.password === "instructor123") {
-            const instructorUser = { nombre: "Instructor", usuario: "instructor", contrasena: "instructor123", rol: "Instructor" };
-            setUser(instructorUser);
-            localStorage.setItem("usuario_actual", JSON.stringify(instructorUser));
-            navigate("/instructor");
-            return;
-        }
-
-        if (form.username === "cliente" && form.password === "cliente123") {
-            const clienteUser = { nombre: "Cliente", usuario: "cliente", contrasena: "cliente123", rol: "Cliente" };
-            setUser(clienteUser);
-            localStorage.setItem("usuario_actual", JSON.stringify(clienteUser));
-            navigate("/cliente");
-            return;
-        }
+        setFieldErrors({});
 
         try {
 
-            const requestData = {
-                email: form.email,
-                password: form.password
-            };
-
             const response =
                 await axios.post(
-                    "https://localhost:7271/Login/login",
-                    requestData
+                    "http://localhost:5164/Login/login",
+                    {
+                        email: form.email,
+                        password: form.password
+                    }
                 );
 
             if (response.data.status) {
@@ -83,28 +77,38 @@ function Login({ setUser }) {
                     JSON.stringify(usuario)
                 );
 
-                alert("Login exitoso");
-
                 if (data.role === "ADMIN") {
                     navigate("/admin");
                 }
-                else {
+                else if (data.role === "SUBMITTER") {
                     navigate("/catalog");
                 }
+                else {
+                    navigate("/");
+                }
             }
-
         }
         catch (error) {
 
-            console.error(error);
+            if (error.response?.data?.field) {
 
-            alert("Correo o contraseña incorrectos");
+                setFieldErrors({
+                    [error.response.data.field]:
+                    error.response.data.message
+                });
+
+            } else {
+
+                alert("Error al iniciar sesión");
+            }
         }
     };
 
     const handleRegister = async (e) => {
 
         e.preventDefault();
+
+        setFieldErrors({});
 
         try {
 
@@ -119,15 +123,15 @@ function Login({ setUser }) {
                 country: form.country,
 
                 preferred_language:
-                form.preferred_language,
+                    form.preferred_language,
 
                 accept_disclosure:
-                form.accept_disclosure
+                    form.accept_disclosure
             };
 
             const response =
                 await axios.post(
-                    "https://localhost:7271/Register/register",
+                    "http://localhost:5164/Register/register",
                     payload
                 );
 
@@ -138,52 +142,140 @@ function Login({ setUser }) {
                 );
 
                 setMode("login");
+
+                setForm({
+                    email: "",
+                    password: "",
+                    alias: "",
+                    regPassword: "",
+                    country: "CR",
+                    preferred_language: "es",
+                    accept_disclosure: false
+                });
             }
         }
         catch (error) {
 
-            console.error(error);
+            if (error.response?.data?.field) {
 
-            alert(
-                error.response?.data ||
-                "Error al registrar usuario"
-            );
+                setFieldErrors({
+                    [error.response.data.field]:
+                    error.response.data.message
+                });
+
+            } else {
+
+                alert("Error al registrar usuario");
+            }
         }
     };
+
     return (
         <div className={styles.loginWrapper}>
             <div className={styles.wrapper}>
+
                 {mode === "login" ? (
+
                     <form onSubmit={handleLogin}>
-                        <h1 className={styles.title}>PokeGrading</h1>
+
+                        <h1 className={styles.title}>
+                            PokeGrading
+                        </h1>
+
                         <div className={styles.inputBox}>
-                            <input type="email" name="email" placeholder="Correo electrónico"
-                                   value={form.email} onChange={handleChange} required />
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="Correo electrónico"
+                                value={form.email}
+                                onChange={handleChange}
+                                required
+                            />
                             <FaRegUser className={styles.icon} />
                         </div>
+
+                        {fieldErrors.email &&
+                            <span className={styles.errorText}>
+                                {fieldErrors.email}
+                            </span>
+                        }
+
                         <div className={styles.inputBox}>
-                            <input type={showPassword ? "text" : "password"} name="password" placeholder="Contraseña"
-                                   value={form.password} onChange={handleChange} required />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                placeholder="Contraseña"
+                                value={form.password}
+                                onChange={handleChange}
+                                required
+                            />
                             <MdLockOutline className={styles.icon} />
                         </div>
-                        <div className={styles.checkboxContainer}>
-                            <input type="checkbox" id="showPassword" checked={showPassword}
-                                   onChange={(e) => setShowPassword(e.target.checked)} className={styles.checkbox} />
-                            <label htmlFor="showPassword" className={styles.checkboxLabel}>Mostrar contraseña</label>
-                        </div>
-                        <button type="submit" className={styles.button}>Ingresar</button>
 
-                        {/* Selector de pestaña dentro del contenedor */}
-                        <div className={styles.tabSelector}>
-                            <span className={mode === "login" ? styles.active : ""}
-                                  onClick={() => setMode("login")}>Ingreso</span>
-                            <span className={mode === "registro" ? styles.active : ""}
-                                  onClick={() => setMode("registro")}>Registro</span>
+                        {fieldErrors.password &&
+                            <span className={styles.errorText}>
+                                {fieldErrors.password}
+                            </span>
+                        }
+
+                        <div className={styles.checkboxContainer}>
+                            <input
+                                type="checkbox"
+                                id="showPassword"
+                                checked={showPassword}
+                                onChange={(e) =>
+                                    setShowPassword(e.target.checked)
+                                }
+                                className={styles.checkbox}
+                            />
+                            <label
+                                htmlFor="showPassword"
+                                className={styles.checkboxLabel}
+                            >
+                                Mostrar contraseña
+                            </label>
                         </div>
+
+                        <button
+                            type="submit"
+                            className={styles.button}
+                        >
+                            Ingresar
+                        </button>
+
+                        <div className={styles.tabSelector}>
+                            <span
+                                className={
+                                    mode === "login"
+                                        ? styles.active
+                                        : ""
+                                }
+                                onClick={() => setMode("login")}
+                            >
+                                Ingreso
+                            </span>
+
+                            <span
+                                className={
+                                    mode === "registro"
+                                        ? styles.active
+                                        : ""
+                                }
+                                onClick={() => setMode("registro")}
+                            >
+                                Registro
+                            </span>
+                        </div>
+
                     </form>
+
                 ) : (
+
                     <form onSubmit={handleRegister}>
-                        <h1 className={styles.title}>Registro Usuario</h1>
+
+                        <h1 className={styles.title}>
+                            Registro Usuario
+                        </h1>
 
                         <div className={styles.formGrid}>
 
@@ -199,6 +291,12 @@ function Login({ setUser }) {
                                         required
                                     />
                                 </div>
+
+                                {fieldErrors.email &&
+                                    <span className={styles.errorText}>
+                                        {fieldErrors.email}
+                                    </span>
+                                }
 
                                 <div className={styles.inputBox}>
                                     <input
@@ -221,6 +319,12 @@ function Login({ setUser }) {
                                         required
                                     />
                                 </div>
+
+                                {fieldErrors.password &&
+                                    <span className={styles.errorText}>
+                                        {fieldErrors.password}
+                                    </span>
+                                }
 
                             </div>
 
@@ -258,20 +362,23 @@ function Login({ setUser }) {
                                         type="checkbox"
                                         name="accept_disclosure"
                                         checked={form.accept_disclosure}
-                                        onChange={(e) =>
-                                            setForm(prev => ({
-                                                ...prev,
-                                                accept_disclosure: e.target.checked
-                                            }))
-                                        }
+                                        onChange={handleChange}
                                         className={styles.checkbox}
                                     />
 
-                                    <label className={styles.checkboxLabel}>
+                                    <label
+                                        className={styles.checkboxLabel}
+                                    >
                                         Acepto el disclosure de PokéGrading
                                     </label>
 
                                 </div>
+
+                                {fieldErrors.accept_disclosure &&
+                                    <span className={styles.errorText}>
+                                        {fieldErrors.accept_disclosure}
+                                    </span>
+                                }
 
                             </div>
 
@@ -287,19 +394,24 @@ function Login({ setUser }) {
                             </button>
 
                             <div className={styles.tabSelector}>
-                                <span
-                                    className={mode === "login"
-                                    ? styles.active
-                                    : ""}
-                             onClick={() => setMode("login")}
-                            >
-                                Ingreso
-                            </span>
 
                                 <span
-                                    className={mode === "registro"
-                                        ? styles.active
-                                        : ""}
+                                    className={
+                                        mode === "login"
+                                            ? styles.active
+                                            : ""
+                                    }
+                                    onClick={() => setMode("login")}
+                                >
+                                    Ingreso
+                                </span>
+
+                                <span
+                                    className={
+                                        mode === "registro"
+                                            ? styles.active
+                                            : ""
+                                    }
                                     onClick={() => setMode("registro")}
                                 >
                                     Registro
@@ -308,8 +420,10 @@ function Login({ setUser }) {
                             </div>
 
                         </div>
+
                     </form>
                 )}
+
             </div>
         </div>
     );
