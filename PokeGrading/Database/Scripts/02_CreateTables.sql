@@ -143,4 +143,92 @@ CREATE TABLE AUDIT_LOGS (
     ip_address VARCHAR(100),
     timestamp DATETIME2 NOT NULL
 );
+
+CREATE TABLE ALGORITHM_VERSIONS (
+    version_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    version_name VARCHAR(100) NOT NULL,
+    description VARCHAR(MAX),
+    created_at DATETIME2 NOT NULL,
+    active BIT NOT NULL
+);
+
+CREATE TABLE PLAYBOOK_VERSIONS (
+    playbook_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    version_id UNIQUEIDENTIFIER NOT NULL,
+    title VARCHAR(255),
+    content_url VARCHAR(1000),
+    created_at DATETIME2 NOT NULL
+);
+
+CREATE TABLE GRADING (
+    grading_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+
+    user_id UNIQUEIDENTIFIER NOT NULL,
+
+    card_id UNIQUEIDENTIFIER NOT NULL,
+
+    version_id UNIQUEIDENTIFIER NOT NULL,
+
+    estimated_grade DECIMAL(4,2),
+
+    confidence_score DECIMAL(5,2),
+
+    recommendation VARCHAR(100),
+
+    status VARCHAR(50),
+
+    created_at DATETIME2 NOT NULL
+);
+
+CREATE TABLE GRADING_IMAGES (
+    grading_image_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+
+    grading_id UNIQUEIDENTIFIER NOT NULL,
+
+    image_type VARCHAR(50),
+
+    image_url VARCHAR(1000)
+);
+
+CREATE TABLE SUBGRADES (
+    subgrade_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+
+    grading_id UNIQUEIDENTIFIER NOT NULL,
+
+    centering DECIMAL(4,2),
+
+    corners DECIMAL(4,2),
+
+    edges DECIMAL(4,2),
+
+    surface DECIMAL(4,2)
+);
+
+CREATE TABLE REVIEWS (
+    review_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+
+    grading_id UNIQUEIDENTIFIER NOT NULL,
+
+    reviewer_id UNIQUEIDENTIFIER NOT NULL,
+
+    review_grade DECIMAL(4,2),
+
+    review_notes VARCHAR(MAX),
+
+    created_at DATETIME2 NOT NULL
+);
+
+CREATE TABLE PRICE_ESTIMATES (
+    estimate_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+
+    grading_id UNIQUEIDENTIFIER NOT NULL,
+
+    raw_price DECIMAL(18,2),
+
+    graded_price DECIMAL(18,2),
+
+    expected_gain DECIMAL(18,2),
+
+    source VARCHAR(255)
+);
 GO
