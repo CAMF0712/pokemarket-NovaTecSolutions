@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Services
 builder.Services.AddControllers();
 
+builder.Services.AddScoped<SQL_connection>();
+
 builder.Services.AddScoped<DatabaseService>();
 
 builder.Services.AddCors(options =>
