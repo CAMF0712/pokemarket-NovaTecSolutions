@@ -19,19 +19,47 @@ CHECK (status IN ('ACTIVE','SUSPENDED','PENDING_ACTIVATION','EXPIRED'));
 
 ALTER TABLE USERS
 ADD CONSTRAINT CK_USERS_LANGUAGE
-CHECK (preferred_language IN ('ES','EN'));
+CHECK (
+    preferred_language IS NULL
+    OR
+    preferred_language IN ('ES','EN')
+);
 
 ALTER TABLE USERS
 ADD CONSTRAINT CK_USERS_COUNTRY
-CHECK (country IN ('CR','PA','MX','CO','CL','AR'));
+CHECK (
+    country IS NULL
+    OR
+    country IN ('CR','PA','MX','CO','CL','AR')
+);
 
 ALTER TABLE ACCOUNT_ACTIVATIONS
 ADD CONSTRAINT CK_ACCOUNT_ACTIVATIONS_STATUS
-CHECK (status IN ('PENDING','APPROVED','REJECTED','ACTIVATED','EXPIRED'));
+CHECK (
+    status IS NULL
+    OR
+    status IN
+    (
+        'PENDING',
+        'APPROVED',
+        'REJECTED',
+        'ACTIVATED',
+        'EXPIRED'
+    )
+);
 
 ALTER TABLE API_KEYS
 ADD CONSTRAINT CK_API_KEY_STATUS
-CHECK (status IN ('ACTIVE','ROTATED','REVOKED'));
+CHECK (
+    status IS NULL
+    OR
+    status IN
+    (
+        'ACTIVE',
+        'ROTATED',
+        'REVOKED'
+    )
+);
 
 ALTER TABLE SUBSCRIPTIONS
 ADD CONSTRAINT CK_SUBSCRIPTION_DATES
@@ -56,4 +84,62 @@ CHECK (status IN ('PENDING','VALIDATED','CONFIRMED','PARTIAL','CANCELLED'));
 ALTER TABLE IMPORT_BATCH_ITEMS
 ADD CONSTRAINT CK_IMPORT_ITEM_STATUS
 CHECK (status IN ('VALID','INVALID','DUPLICATE','IMPORTED'));
+
+ALTER TABLE GRADING
+ADD CONSTRAINT CK_GRADING_STATUS
+CHECK
+(
+    status IN
+    (
+        'PENDING',
+        'PROCESSING',
+        'COMPLETED',
+        'REVIEWED',
+        'REJECTED'
+    )
+);
+
+ALTER TABLE GRADING
+ADD CONSTRAINT CK_CONFIDENCE_SCORE
+CHECK
+(
+    confidence_score IS NULL
+    OR
+    (
+        confidence_score >= 0
+        AND confidence_score <= 100
+    )
+);
+ALTER TABLE SUBGRADES
+ADD CONSTRAINT CK_SUBGRADES_RANGE
+CHECK
+(
+    (centering IS NULL OR (centering BETWEEN 1 AND 10))
+    AND
+    (corners IS NULL OR (corners BETWEEN 1 AND 10))
+    AND
+    (edges IS NULL OR (edges BETWEEN 1 AND 10))
+    AND
+    (surface IS NULL OR (surface BETWEEN 1 AND 10))
+);
+ALTER TABLE PRICE_ESTIMATES
+ADD CONSTRAINT CK_PRICE_ESTIMATES_POSITIVE
+CHECK
+(
+    (raw_price IS NULL OR raw_price >= 0)
+    AND
+    (graded_price IS NULL OR graded_price >= 0)
+    AND
+    (expected_gain IS NULL OR expected_gain >= 0)
+);
+ALTER TABLE CARD_VERSIONS
+ADD CONSTRAINT UQ_CARD_IDENTITY
+UNIQUE
+(
+    set_name,
+    card_number,
+    edition,
+    language,
+    finish_type
+);
 GO
