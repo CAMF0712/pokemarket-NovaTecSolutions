@@ -1,4 +1,5 @@
-﻿using BCrypt.Net;
+﻿using System.Security.Cryptography;
+using System.Text;
 
 namespace PokeGrading.Utilities
 {
@@ -6,12 +7,24 @@ namespace PokeGrading.Utilities
     {
         public static string HashPassword(string password)
         {
-            return BCrypt.Net.BCrypt.HashPassword(password);
-        }
+            using MD5 md5 = MD5.Create();
 
-        public static bool VerifyPassword(string password, string hash)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, hash);
+            byte[] inputBytes =
+                Encoding.UTF8.GetBytes(password);
+
+            byte[] hashBytes =
+                md5.ComputeHash(inputBytes);
+
+            StringBuilder sb =
+                new StringBuilder();
+
+            foreach (byte b in hashBytes)
+            {
+                sb.Append(
+                    b.ToString("x2"));
+            }
+
+            return sb.ToString();
         }
     }
 }
