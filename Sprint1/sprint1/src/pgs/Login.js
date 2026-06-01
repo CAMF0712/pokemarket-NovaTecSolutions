@@ -52,7 +52,7 @@ function Login({ setUser }) {
 
             const response =
                 await axios.post(
-                    "http://localhost:5164/Login/login",
+                    "https://localhost:7271/Login/login",
                     {
                         email: form.email,
                         password: form.password
@@ -131,7 +131,7 @@ function Login({ setUser }) {
 
             const response =
                 await axios.post(
-                    "http://localhost:5164/Register/register",
+                    "https://localhost:7271/Register/register",
                     payload
                 );
 
