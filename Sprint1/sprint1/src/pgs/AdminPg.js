@@ -1,5 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
+import CardCatalog
+    from "../components/CardCatalog";
 
 function AdminPg() {
 
@@ -10,7 +12,11 @@ function AdminPg() {
             )
         );
 
-    const [form, setForm] = useState({
+    const [refreshKey,
+        setRefreshKey] = useState(0);
+
+    const initialForm = {
+
         card_name: "",
         set_name: "",
         card_number: "",
@@ -21,17 +27,17 @@ function AdminPg() {
         pokemon_type: "",
         hp: "",
         illustrator: "",
-        release_year: ""
-    });
+        release_year: "",
 
-    const [frontImage, setFrontImage] =
-        useState(null);
+        front_image: null,
+        back_image: null
+    };
 
-    const [backImage, setBackImage] =
-        useState(null);
+    const [form, setForm] =
+        useState(initialForm);
 
     //----------------------------------
-    // Inputs
+    // Text / Select Changes
     //----------------------------------
 
     const handleChange = (e) => {
@@ -44,7 +50,21 @@ function AdminPg() {
     };
 
     //----------------------------------
-    // Submit
+    // File Changes
+    //----------------------------------
+
+    const handleFileChange =
+        (e) => {
+
+            setForm({
+                ...form,
+                [e.target.name]:
+                    e.target.files[0]
+            });
+        };
+
+    //----------------------------------
+    // Create Card
     //----------------------------------
 
     const addCard = async (e) => {
@@ -61,52 +81,64 @@ function AdminPg() {
                 user.user_id
             );
 
-            Object.keys(form).forEach(
-                key => {
+            Object.keys(form)
+                .forEach(key => {
 
-                    formData.append(
-                        key,
-                        form[key]
-                    );
+                    if (
+                        form[key] !== null &&
+                        form[key] !== ""
+                    ) {
+                        formData.append(
+                            key,
+                            form[key]
+                        );
+                    }
+                });
+
+            await axios.post(
+                "https://localhost:7271/Card/create",
+                formData,
+                {
+                    headers: {
+                        "Content-Type":
+                            "multipart/form-data"
+                    }
                 }
             );
 
-            if (frontImage) {
-
-                formData.append(
-                    "front_image",
-                    frontImage
-                );
-            }
-
-            if (backImage) {
-
-                formData.append(
-                    "back_image",
-                    backImage
-                );
-            }
-
-            const response =
-                await axios.post(
-                    "https://localhost:7271/Card/create",
-                    formData,
-                    {
-                        headers: {
-                            "Content-Type":
-                                "multipart/form-data"
-                        }
-                    }
-                );
-
             alert(
-                `Card created!\n\nCard ID: ${response.data.card_id}`
+                "Card created successfully"
             );
+
+            setRefreshKey(
+                previous =>
+                    previous + 1
+            );
+
+            //----------------------------------
+            // Reset Form
+            //----------------------------------
+
+            setForm(initialForm);
+
+            const frontInput =
+                document.getElementById(
+                    "front_image"
+                );
+
+            const backInput =
+                document.getElementById(
+                    "back_image"
+                );
+
+            if (frontInput)
+                frontInput.value = "";
+
+            if (backInput)
+                backInput.value = "";
 
         }
         catch (error) {
-
-            console.error(error);
 
             alert(
                 error.response?.data ||
@@ -119,23 +151,16 @@ function AdminPg() {
 
         <div
             style={{
-                maxWidth: "1000px",
+                maxWidth: "900px",
                 margin: "40px auto",
                 padding: "30px",
-                borderRadius: "12px",
-                background: "#ffffff",
-                boxShadow:
-                    "0px 4px 12px rgba(0,0,0,0.15)"
+                border: "1px solid #ddd",
+                borderRadius: "10px"
             }}
         >
 
-            <h1
-                style={{
-                    textAlign: "center",
-                    marginBottom: "30px"
-                }}
-            >
-                Pokémon Card Administration
+            <h1>
+                Add Pokémon Card
             </h1>
 
             <form onSubmit={addCard}>
@@ -170,185 +195,9 @@ function AdminPg() {
                         onChange={handleChange}
                     />
 
-                    <select
-                        name="edition"
-                        value={form.edition}
-                        onChange={handleChange}
-                    >
-                        <option value="">
-                            Select Edition
-                        </option>
-
-                        <option value="1st Edition">
-                            1st Edition
-                        </option>
-
-                        <option value="Unlimited">
-                            Unlimited
-                        </option>
-
-                        <option value="Shadowless">
-                            Shadowless
-                        </option>
-                    </select>
-
-                    <select
-                        name="language"
-                        value={form.language}
-                        onChange={handleChange}
-                    >
-                        <option value="">
-                            Select Language
-                        </option>
-
-                        <option value="English">
-                            English
-                        </option>
-
-                        <option value="Spanish">
-                            Spanish
-                        </option>
-
-                        <option value="Japanese">
-                            Japanese
-                        </option>
-
-                        <option value="German">
-                            German
-                        </option>
-
-                        <option value="French">
-                            French
-                        </option>
-
-                        <option value="Italian">
-                            Italian
-                        </option>
-
-                        <option value="Portuguese">
-                            Portuguese
-                        </option>
-                    </select>
-
-                    <select
-                        name="finish_type"
-                        value={form.finish_type}
-                        onChange={handleChange}
-                    >
-                        <option value="">
-                            Select Finish Type
-                        </option>
-
-                        <option value="Non-Holo">
-                            Non-Holo
-                        </option>
-
-                        <option value="Holo">
-                            Holo
-                        </option>
-
-                        <option value="Reverse Holo">
-                            Reverse Holo
-                        </option>
-
-                        <option value="Full Art">
-                            Full Art
-                        </option>
-                    </select>
-
-                    <select
-                        name="rarity"
-                        value={form.rarity}
-                        onChange={handleChange}
-                    >
-                        <option value="">
-                            Select Rarity
-                        </option>
-
-                        <option value="Common">
-                            Common
-                        </option>
-
-                        <option value="Uncommon">
-                            Uncommon
-                        </option>
-
-                        <option value="Rare">
-                            Rare
-                        </option>
-
-                        <option value="Holo Rare">
-                            Holo Rare
-                        </option>
-
-                        <option value="Ultra Rare">
-                            Ultra Rare
-                        </option>
-
-                        <option value="Secret Rare">
-                            Secret Rare
-                        </option>
-                    </select>
-
-                    <select
-                        name="pokemon_type"
-                        value={form.pokemon_type}
-                        onChange={handleChange}
-                    >
-                        <option value="">
-                            Select Pokémon Type
-                        </option>
-
-                        <option value="Grass">
-                            Grass
-                        </option>
-
-                        <option value="Fire">
-                            Fire
-                        </option>
-
-                        <option value="Water">
-                            Water
-                        </option>
-
-                        <option value="Lightning">
-                            Lightning
-                        </option>
-
-                        <option value="Psychic">
-                            Psychic
-                        </option>
-
-                        <option value="Fighting">
-                            Fighting
-                        </option>
-
-                        <option value="Darkness">
-                            Darkness
-                        </option>
-
-                        <option value="Metal">
-                            Metal
-                        </option>
-
-                        <option value="Dragon">
-                            Dragon
-                        </option>
-
-                        <option value="Fairy">
-                            Fairy
-                        </option>
-
-                        <option value="Colorless">
-                            Colorless
-                        </option>
-                    </select>
-
                     <input
-                        type="number"
-                        min="1"
-                        max="500"
                         name="hp"
+                        type="number"
                         placeholder="HP"
                         value={form.hp}
                         onChange={handleChange}
@@ -362,114 +211,224 @@ function AdminPg() {
                     />
 
                     <input
-                        type="number"
-                        min="1996"
-                        max={new Date().getFullYear()}
                         name="release_year"
+                        type="number"
                         placeholder="Release Year"
                         value={form.release_year}
                         onChange={handleChange}
                     />
 
-                </div>
-
-                <hr
-                    style={{
-                        margin:
-                            "30px 0"
-                    }}
-                />
-
-                <h3>
-                    Images
-                </h3>
-
-                <div
-                    style={{
-                        marginBottom: "20px"
-                    }}
-                >
-                    <label>
-                        Front Image (Required)
-                    </label>
-
-                    <br />
-
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                            setFrontImage(
-                                e.target.files[0]
-                            )
-                        }
-                    />
-                </div>
-
-                <div
-                    style={{
-                        marginBottom: "20px"
-                    }}
-                >
-                    <label>
-                        Back Image (Optional)
-                    </label>
-
-                    <br />
-
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                            setBackImage(
-                                e.target.files[0]
-                            )
-                        }
-                    />
-                </div>
-
-                {frontImage && (
-
-                    <div
-                        style={{
-                            marginBottom: "20px"
-                        }}
+                    <select
+                        name="edition"
+                        value={form.edition}
+                        onChange={handleChange}
                     >
-                        <h4>
-                            Front Preview
-                        </h4>
+                        <option value="">
+                            Select Edition
+                        </option>
+                        <option>
+                            Unlimited
+                        </option>
+                        <option>
+                            1st Edition
+                        </option>
+                        <option>
+                            Shadowless
+                        </option>
+                    </select>
 
-                        <img
-                            src={
-                                URL.createObjectURL(
-                                    frontImage
-                                )
-                            }
-                            alt="Front Preview"
-                            style={{
-                                width: "250px",
-                                borderRadius: "10px"
-                            }}
-                        />
-                    </div>
-                )}
+                    <select
+                        name="language"
+                        value={form.language}
+                        onChange={handleChange}
+                    >
+                        <option value="">
+                            Select Language
+                        </option>
+                        <option>
+                            English
+                        </option>
+                        <option>
+                            Spanish
+                        </option>
+                        <option>
+                            Japanese
+                        </option>
+                        <option>
+                            German
+                        </option>
+                        <option>
+                            French
+                        </option>
+                        <option>
+                            Italian
+                        </option>
+                        <option>
+                            Portuguese
+                        </option>
+                    </select>
+
+                    <select
+                        name="finish_type"
+                        value={form.finish_type}
+                        onChange={handleChange}
+                    >
+                        <option value="">
+                            Select Finish
+                        </option>
+                        <option>
+                            Non-Holo
+                        </option>
+                        <option>
+                            Holo
+                        </option>
+                        <option>
+                            Reverse Holo
+                        </option>
+                        <option>
+                            Full Art
+                        </option>
+                    </select>
+
+                    <select
+                        name="rarity"
+                        value={form.rarity}
+                        onChange={handleChange}
+                    >
+                        <option value="">
+                            Select Rarity
+                        </option>
+                        <option>
+                            Common
+                        </option>
+                        <option>
+                            Uncommon
+                        </option>
+                        <option>
+                            Rare
+                        </option>
+                        <option>
+                            Holo Rare
+                        </option>
+                        <option>
+                            Ultra Rare
+                        </option>
+                        <option>
+                            Secret Rare
+                        </option>
+                    </select>
+
+                    <select
+                        name="pokemon_type"
+                        value={form.pokemon_type}
+                        onChange={handleChange}
+                    >
+                        <option value="">
+                            Select Type
+                        </option>
+                        <option>
+                            Grass
+                        </option>
+                        <option>
+                            Fire
+                        </option>
+                        <option>
+                            Water
+                        </option>
+                        <option>
+                            Lightning
+                        </option>
+                        <option>
+                            Psychic
+                        </option>
+                        <option>
+                            Fighting
+                        </option>
+                        <option>
+                            Darkness
+                        </option>
+                        <option>
+                            Metal
+                        </option>
+                        <option>
+                            Dragon
+                        </option>
+                        <option>
+                            Fairy
+                        </option>
+                        <option>
+                            Colorless
+                        </option>
+                    </select>
+
+                </div>
+
+                <hr />
+
+                <div
+                    style={{
+                        marginBottom: "15px"
+                    }}
+                >
+                    <label>
+                        Front Image
+                        (Required)
+                    </label>
+
+                    <br />
+
+                    <input
+                        id="front_image"
+                        name="front_image"
+                        type="file"
+                        accept="image/*"
+                        onChange={
+                            handleFileChange
+                        }
+                    />
+                </div>
+
+                <div
+                    style={{
+                        marginBottom: "15px"
+                    }}
+                >
+                    <label>
+                        Back Image
+                        (Optional)
+                    </label>
+
+                    <br />
+
+                    <input
+                        id="back_image"
+                        name="back_image"
+                        type="file"
+                        accept="image/*"
+                        onChange={
+                            handleFileChange
+                        }
+                    />
+                </div>
 
                 <button
                     type="submit"
                     style={{
-                        width: "100%",
-                        padding: "15px",
-                        fontSize: "16px",
-                        fontWeight: "bold",
-                        border: "none",
-                        borderRadius: "8px",
-                        cursor: "pointer"
+                        padding:
+                            "10px 20px",
+                        fontSize: "16px"
                     }}
                 >
                     Create Card
                 </button>
 
             </form>
+
+            <hr />
+
+            <CardCatalog
+                key={refreshKey}
+            />
 
         </div>
     );

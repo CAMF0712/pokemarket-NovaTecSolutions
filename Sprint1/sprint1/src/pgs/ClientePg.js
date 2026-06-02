@@ -1,11 +1,24 @@
-import React from "react";
+import CardCatalog
+    from "../components/CardCatalog";
 
 function ClientePg() {
+
     return (
-        <div style={{ padding: "2rem" }}>
-            <h1>Bienvenido, Cliente</h1>
-            <p>Esta es la página del cliente.</p>
+
+        <div
+            style={{
+                padding: "30px"
+            }}
+        >
+
+            <h1>
+                Pokémon Catalog
+            </h1>
+
+            <CardCatalog />
+
         </div>
+
     );
 }
 

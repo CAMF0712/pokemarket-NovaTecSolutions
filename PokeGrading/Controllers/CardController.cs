@@ -481,156 +481,191 @@ namespace PokeGrading.Controllers
                     card_name = input.card_name
                 });
         }
+
         [HttpPost("version")]
         public IActionResult CreateVersion(
-    [FromBody]
-    Data_input_create_card_version input)
-        {
-            //----------------------------------
-            // Verify Card Exists
-            //----------------------------------
+        [FromBody]
+            Data_input_create_card_version input)
+                {
+                    //----------------------------------
+                    // Verify Card Exists
+                    //----------------------------------
 
-            var cardExists =
-                _database.QuerySingleOrDefault<Guid?>
-                (
+                    var cardExists =
+                        _database.QuerySingleOrDefault<Guid?>
+                        (
+                            @"
+                    SELECT card_id
+                    FROM CARDS
+                    WHERE card_id = @card_id
+                    ",
+                            new()
+                            {
+                        {"card_id", input.card_id}
+                            }
+                        );
+
+                    if (cardExists == null)
+                    {
+                        return NotFound(
+                            "Card not found"
+                        );
+                    }
+
+                    //----------------------------------
+                    // Create New Version
+                    //----------------------------------
+
+                    Guid versionId =
+                        Guid.NewGuid();
+
+                    _database.ExecuteNonQuery(
                     @"
-            SELECT card_id
-            FROM CARDS
+            INSERT INTO CARD_VERSIONS
+            (
+                version_id,
+                card_id,
+                set_name,
+                card_number,
+                edition,
+                language,
+                finish_type,
+                name,
+                rarity,
+                pokemon_type,
+                hp,
+                illustrator,
+                release_year,
+                created_by,
+                created_at
+            )
+            VALUES
+            (
+                @version_id,
+                @card_id,
+                @set_name,
+                @card_number,
+                @edition,
+                @language,
+                @finish_type,
+                @name,
+                @rarity,
+                @pokemon_type,
+                @hp,
+                @illustrator,
+                @release_year,
+                @created_by,
+                GETUTCDATE()
+            )
+            ",
+                    new()
+                    {
+                {"version_id", versionId},
+                {"card_id", input.card_id},
+                {"set_name", input.set_name},
+                {"card_number", input.card_number},
+                {"edition", input.edition},
+                {"language", input.language},
+                {"finish_type", input.finish_type},
+                {"name", input.card_name},
+                {"rarity", input.rarity},
+                {"pokemon_type", input.pokemon_type},
+                {"hp", input.hp},
+                {"illustrator", input.illustrator},
+                {"release_year", input.release_year},
+                {"created_by", input.created_by}
+                    });
+
+                    //----------------------------------
+                    // Update Current Version
+                    //----------------------------------
+
+                    _database.ExecuteNonQuery(
+                    @"
+            UPDATE CARDS
+            SET current_version_id = @version_id
             WHERE card_id = @card_id
             ",
                     new()
                     {
+                {"version_id", versionId},
                 {"card_id", input.card_id}
-                    }
-                );
+                    });
 
-            if (cardExists == null)
-            {
-                return NotFound(
-                    "Card not found"
-                );
-            }
+                    //----------------------------------
+                    // Audit
+                    //----------------------------------
 
-            //----------------------------------
-            // Create New Version
-            //----------------------------------
+                    _database.ExecuteNonQuery(
+                    @"
+            INSERT INTO AUDIT_LOGS
+            (
+                audit_id,
+                user_id,
+                action_type,
+                entity_name,
+                entity_id,
+                new_value,
+                timestamp
+            )
+            VALUES
+            (
+                @audit_id,
+                @user_id,
+                'UPDATE_CARD',
+                'CARD',
+                @entity_id,
+                @new_value,
+                GETUTCDATE()
+            )
+            ",
+                    new()
+                    {
+                {"audit_id", Guid.NewGuid()},
+                {"user_id", input.created_by},
+                {"entity_id", input.card_id},
+                {"new_value", input.card_name}
+                    });
 
-            Guid versionId =
-                Guid.NewGuid();
-
-            _database.ExecuteNonQuery(
-            @"
-    INSERT INTO CARD_VERSIONS
-    (
-        version_id,
-        card_id,
-        set_name,
-        card_number,
-        edition,
-        language,
-        finish_type,
-        name,
-        rarity,
-        pokemon_type,
-        hp,
-        illustrator,
-        release_year,
-        created_by,
-        created_at
-    )
-    VALUES
-    (
-        @version_id,
-        @card_id,
-        @set_name,
-        @card_number,
-        @edition,
-        @language,
-        @finish_type,
-        @name,
-        @rarity,
-        @pokemon_type,
-        @hp,
-        @illustrator,
-        @release_year,
-        @created_by,
-        GETUTCDATE()
-    )
-    ",
-            new()
-            {
-        {"version_id", versionId},
-        {"card_id", input.card_id},
-        {"set_name", input.set_name},
-        {"card_number", input.card_number},
-        {"edition", input.edition},
-        {"language", input.language},
-        {"finish_type", input.finish_type},
-        {"name", input.card_name},
-        {"rarity", input.rarity},
-        {"pokemon_type", input.pokemon_type},
-        {"hp", input.hp},
-        {"illustrator", input.illustrator},
-        {"release_year", input.release_year},
-        {"created_by", input.created_by}
-            });
-
-            //----------------------------------
-            // Update Current Version
-            //----------------------------------
-
-            _database.ExecuteNonQuery(
-            @"
-    UPDATE CARDS
-    SET current_version_id = @version_id
-    WHERE card_id = @card_id
-    ",
-            new()
-            {
-        {"version_id", versionId},
-        {"card_id", input.card_id}
-            });
-
-            //----------------------------------
-            // Audit
-            //----------------------------------
-
-            _database.ExecuteNonQuery(
-            @"
-    INSERT INTO AUDIT_LOGS
-    (
-        audit_id,
-        user_id,
-        action_type,
-        entity_name,
-        entity_id,
-        new_value,
-        timestamp
-    )
-    VALUES
-    (
-        @audit_id,
-        @user_id,
-        'UPDATE_CARD',
-        'CARD',
-        @entity_id,
-        @new_value,
-        GETUTCDATE()
-    )
-    ",
-            new()
-            {
-        {"audit_id", Guid.NewGuid()},
-        {"user_id", input.created_by},
-        {"entity_id", input.card_id},
-        {"new_value", input.card_name}
-            });
-
-            return Ok(new
-            {
-                status = true,
-                version_id = versionId
-            });
+                    return Ok(new
+                    {
+                        status = true,
+                        version_id = versionId
+                    });
         }
+
+        [HttpGet("catalog")]
+        public IActionResult GetCatalog()
+        {
+                var cards =
+                    _database.Query(
+                    @"
+            SELECT
+                c.card_id,
+                cv.version_id,
+                cv.name AS card_name,
+                cv.set_name,
+                cv.card_number,
+                cv.rarity,
+                cv.pokemon_type,
+                cv.hp,
+                ci.image_url
+            FROM CARDS c
+            INNER JOIN CARD_VERSIONS cv
+                ON c.current_version_id =
+                   cv.version_id
+            LEFT JOIN CARD_IMAGES ci
+                ON cv.version_id =
+                   ci.version_id
+                AND ci.image_type = 'FRONT'
+            WHERE c.active = 1
+            ORDER BY cv.name
+            ",
+                    new()
+                    );
+
+                return Ok(cards);
+        }
+
     }
 }
