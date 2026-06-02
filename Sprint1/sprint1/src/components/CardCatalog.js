@@ -1,12 +1,24 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-function CardCatalog() {
+function CardCatalog({
+    isAdmin = false,
+    onEdit = null
+}) {
 
-    const [cards, setCards] =
-        useState([]);
+    const [cards,
+        setCards] = useState([]);
 
-    const loadCards = async () => {
+    const [loading,
+        setLoading] = useState(true);
+
+    useEffect(() => {
+
+        loadCatalog();
+
+    }, []);
+
+    const loadCatalog = async () => {
 
         try {
 
@@ -15,23 +27,40 @@ function CardCatalog() {
                     "https://localhost:7271/Card/catalog"
                 );
 
-            setCards(
-                response.data
+            setCards(response.data);
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Error loading catalog"
             );
         }
-        catch {
+        finally {
 
-            console.log(
-                "Error loading cards"
-            );
+            setLoading(false);
         }
     };
 
-    useEffect(() => {
+    if (loading) {
 
-        loadCards();
+        return (
+            <h3>
+                Loading catalog...
+            </h3>
+        );
+    }
 
-    }, []);
+    if (cards.length === 0) {
+
+        return (
+            <h3>
+                No cards found
+            </h3>
+        );
+    }
 
     return (
 
@@ -45,78 +74,121 @@ function CardCatalog() {
                 style={{
                     display: "grid",
                     gridTemplateColumns:
-                        "repeat(auto-fill,minmax(250px,1fr))",
+                        "repeat(auto-fill,minmax(280px,1fr))",
                     gap: "20px"
                 }}
             >
 
-                {cards.map(card => (
+                {
+                    cards.map(card => (
 
-                    <div
-                        key={card.card_id}
-                        style={{
-                            border: "1px solid #ddd",
-                            borderRadius: "10px",
-                            padding: "15px",
-                            background: "#fff"
-                        }}
-                    >
+                        <div
+                            key={card.card_id}
+                            style={{
+                                border:
+                                    "1px solid #ddd",
+                                borderRadius:
+                                    "10px",
+                                padding:
+                                    "15px",
+                                background:
+                                    "#fff"
+                            }}
+                        >
 
-                        {card.image_url && (
+                            {
+                                card.image_url &&
+                                (
+                                    <img
+                                        src={
+                                            `https://localhost:7271${card.image_url}`
+                                        }
+                                        alt={
+                                            card.card_name
+                                        }
+                                        style={{
+                                            width:
+                                                "100%",
+                                            height:
+                                                "350px",
+                                            objectFit:
+                                                "contain",
+                                            marginBottom:
+                                                "10px"
+                                        }}
+                                    />
+                                )
+                            }
 
-                            <img
-                                src={
-                                    "https://localhost:7271" +
-                                    card.image_url
-                                }
-                                alt={
-                                    card.card_name
-                                }
-                                style={{
-                                    width: "100%",
-                                    borderRadius: "10px"
-                                }}
-                            />
+                            <h3>
+                                {card.card_name}
+                            </h3>
 
-                        )}
+                            <p>
+                                <strong>
+                                    Set:
+                                </strong>
+                                {" "}
+                                {card.set_name}
+                            </p>
 
-                        <h4>
-                            {card.card_name}
-                        </h4>
+                            <p>
+                                <strong>
+                                    Number:
+                                </strong>
+                                {" "}
+                                {card.card_number}
+                            </p>
 
-                        <p>
-                            <b>Set:</b>
-                            {" "}
-                            {card.set_name}
-                        </p>
+                            <p>
+                                <strong>
+                                    Rarity:
+                                </strong>
+                                {" "}
+                                {card.rarity}
+                            </p>
 
-                        <p>
-                            <b>Number:</b>
-                            {" "}
-                            {card.card_number}
-                        </p>
+                            <p>
+                                <strong>
+                                    Type:
+                                </strong>
+                                {" "}
+                                {card.pokemon_type}
+                            </p>
 
-                        <p>
-                            <b>Type:</b>
-                            {" "}
-                            {card.pokemon_type}
-                        </p>
+                            <p>
+                                <strong>
+                                    HP:
+                                </strong>
+                                {" "}
+                                {card.hp}
+                            </p>
 
-                        <p>
-                            <b>HP:</b>
-                            {" "}
-                            {card.hp}
-                        </p>
+                            {
+                                isAdmin &&
+                                onEdit &&
+                                (
+                                    <button
+                                        onClick={() =>
+                                            onEdit(card)
+                                        }
+                                        style={{
+                                            width:
+                                                "100%",
+                                            padding:
+                                                "10px",
+                                            marginTop:
+                                                "10px"
+                                        }}
+                                    >
+                                        Edit Card
+                                    </button>
+                                )
+                            }
 
-                        <p>
-                            <b>Rarity:</b>
-                            {" "}
-                            {card.rarity}
-                        </p>
-
-                    </div>
-
-                ))}
+                        </div>
+                    ))
+                }
 
             </div>
 

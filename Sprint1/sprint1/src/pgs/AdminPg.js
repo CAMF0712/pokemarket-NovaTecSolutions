@@ -15,6 +15,14 @@ function AdminPg() {
     const [refreshKey,
         setRefreshKey] = useState(0);
 
+    const [editingCard,
+        setEditingCard] =
+        useState(null);
+
+    const [isEditing,
+        setIsEditing] =
+        useState(false);
+
     const initialForm = {
 
         card_name: "",
@@ -64,7 +72,63 @@ function AdminPg() {
         };
 
     //----------------------------------
-    // Create Card
+    // Load card into editor
+    //----------------------------------
+
+    const loadCardForEdit =
+        (card) => {
+
+            setForm({
+
+                card_name:
+                    card.card_name || "",
+
+                set_name:
+                    card.set_name || "",
+
+                card_number:
+                    card.card_number || "",
+
+                edition:
+                    card.edition || "",
+
+                language:
+                    card.language || "",
+
+                finish_type:
+                    card.finish_type || "",
+
+                rarity:
+                    card.rarity || "",
+
+                pokemon_type:
+                    card.pokemon_type || "",
+
+                hp:
+                    card.hp || "",
+
+                illustrator:
+                    card.illustrator || "",
+
+                release_year:
+                    card.release_year || "",
+
+                front_image: null,
+                back_image: null
+            });
+
+            setEditingCard(card);
+
+            setIsEditing(true);
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        };
+
+    //----------------------------------
+    // Create / Edit Card
     //----------------------------------
 
     const addCard = async (e) => {
@@ -73,42 +137,87 @@ function AdminPg() {
 
         try {
 
-            const formData =
-                new FormData();
+            //----------------------------------
+            // EDIT MODE
+            //----------------------------------
 
-            formData.append(
-                "created_by",
-                user.user_id
-            );
+            if (isEditing) {
 
-            Object.keys(form)
-                .forEach(key => {
+                await axios.post(
+                    "https://localhost:7271/Card/version",
+                    {
+                        card_id:
+                            editingCard.card_id,
 
-                    if (
-                        form[key] !== null &&
-                        form[key] !== ""
-                    ) {
-                        formData.append(
-                            key,
-                            form[key]
-                        );
+                        created_by:
+                            user.user_id,
+
+                        ...form,
+
+                        hp:
+                            parseInt(
+                                form.hp
+                            ),
+
+                        release_year:
+                            parseInt(
+                                form.release_year
+                            )
                     }
-                });
+                );
 
-            await axios.post(
-                "https://localhost:7271/Card/create",
-                formData,
-                {
-                    headers: {
-                        "Content-Type":
-                            "multipart/form-data"
+                alert(
+                    "New version created"
+                );
+            }
+
+            //----------------------------------
+            // CREATE MODE
+            //----------------------------------
+
+            else {
+
+                const formData =
+                    new FormData();
+
+                formData.append(
+                    "created_by",
+                    user.user_id
+                );
+
+                Object.keys(form)
+                    .forEach(key => {
+
+                        if (
+                            form[key] !== null &&
+                            form[key] !== ""
+                        ) {
+                            formData.append(
+                                key,
+                                form[key]
+                            );
+                        }
+                    });
+
+                await axios.post(
+                    "https://localhost:7271/Card/create",
+                    formData,
+                    {
+                        headers: {
+                            "Content-Type":
+                                "multipart/form-data"
+                        }
                     }
-                }
-            );
+                );
 
-            alert(
-                "Card created successfully"
-            );
+                alert(
+                    "Card created successfully"
+                );
+            }
+
+            //----------------------------------
+            // Refresh catalog
+            //----------------------------------
 
             setRefreshKey(
                 previous =>
@@ -116,10 +225,14 @@ function AdminPg() {
             );
 
             //----------------------------------
-            // Reset Form
+            // Reset form
             //----------------------------------
 
             setForm(initialForm);
+
+            setEditingCard(null);
+
+            setIsEditing(false);
 
             const frontInput =
                 document.getElementById(
@@ -142,7 +255,7 @@ function AdminPg() {
 
             alert(
                 error.response?.data ||
-                "Error creating card"
+                "Operation failed"
             );
         }
     };
@@ -160,7 +273,11 @@ function AdminPg() {
         >
 
             <h1>
-                Add Pokémon Card
+                {
+                    isEditing
+                        ? "Edit Pokémon Card"
+                        : "Add Pokémon Card"
+                }
             </h1>
 
             <form onSubmit={addCard}>
@@ -226,15 +343,9 @@ function AdminPg() {
                         <option value="">
                             Select Edition
                         </option>
-                        <option>
-                            Unlimited
-                        </option>
-                        <option>
-                            1st Edition
-                        </option>
-                        <option>
-                            Shadowless
-                        </option>
+                        <option>Unlimited</option>
+                        <option>1st Edition</option>
+                        <option>Shadowless</option>
                     </select>
 
                     <select
@@ -245,27 +356,13 @@ function AdminPg() {
                         <option value="">
                             Select Language
                         </option>
-                        <option>
-                            English
-                        </option>
-                        <option>
-                            Spanish
-                        </option>
-                        <option>
-                            Japanese
-                        </option>
-                        <option>
-                            German
-                        </option>
-                        <option>
-                            French
-                        </option>
-                        <option>
-                            Italian
-                        </option>
-                        <option>
-                            Portuguese
-                        </option>
+                        <option>English</option>
+                        <option>Spanish</option>
+                        <option>Japanese</option>
+                        <option>German</option>
+                        <option>French</option>
+                        <option>Italian</option>
+                        <option>Portuguese</option>
                     </select>
 
                     <select
@@ -276,18 +373,10 @@ function AdminPg() {
                         <option value="">
                             Select Finish
                         </option>
-                        <option>
-                            Non-Holo
-                        </option>
-                        <option>
-                            Holo
-                        </option>
-                        <option>
-                            Reverse Holo
-                        </option>
-                        <option>
-                            Full Art
-                        </option>
+                        <option>Non-Holo</option>
+                        <option>Holo</option>
+                        <option>Reverse Holo</option>
+                        <option>Full Art</option>
                     </select>
 
                     <select
@@ -298,24 +387,12 @@ function AdminPg() {
                         <option value="">
                             Select Rarity
                         </option>
-                        <option>
-                            Common
-                        </option>
-                        <option>
-                            Uncommon
-                        </option>
-                        <option>
-                            Rare
-                        </option>
-                        <option>
-                            Holo Rare
-                        </option>
-                        <option>
-                            Ultra Rare
-                        </option>
-                        <option>
-                            Secret Rare
-                        </option>
+                        <option>Common</option>
+                        <option>Uncommon</option>
+                        <option>Rare</option>
+                        <option>Holo Rare</option>
+                        <option>Ultra Rare</option>
+                        <option>Secret Rare</option>
                     </select>
 
                     <select
@@ -326,101 +403,120 @@ function AdminPg() {
                         <option value="">
                             Select Type
                         </option>
-                        <option>
-                            Grass
-                        </option>
-                        <option>
-                            Fire
-                        </option>
-                        <option>
-                            Water
-                        </option>
-                        <option>
-                            Lightning
-                        </option>
-                        <option>
-                            Psychic
-                        </option>
-                        <option>
-                            Fighting
-                        </option>
-                        <option>
-                            Darkness
-                        </option>
-                        <option>
-                            Metal
-                        </option>
-                        <option>
-                            Dragon
-                        </option>
-                        <option>
-                            Fairy
-                        </option>
-                        <option>
-                            Colorless
-                        </option>
+                        <option>Grass</option>
+                        <option>Fire</option>
+                        <option>Water</option>
+                        <option>Lightning</option>
+                        <option>Psychic</option>
+                        <option>Fighting</option>
+                        <option>Darkness</option>
+                        <option>Metal</option>
+                        <option>Dragon</option>
+                        <option>Fairy</option>
+                        <option>Colorless</option>
                     </select>
 
                 </div>
 
                 <hr />
 
-                <div
-                    style={{
-                        marginBottom: "15px"
-                    }}
-                >
-                    <label>
-                        Front Image
-                        (Required)
-                    </label>
+                {
+                    !isEditing &&
+                    <>
+                        <div
+                            style={{
+                                marginBottom:
+                                    "15px"
+                            }}
+                        >
+                            <label>
+                                Front Image
+                                (Required)
+                            </label>
 
-                    <br />
+                            <br />
 
-                    <input
-                        id="front_image"
-                        name="front_image"
-                        type="file"
-                        accept="image/*"
-                        onChange={
-                            handleFileChange
-                        }
-                    />
-                </div>
+                            <input
+                                id="front_image"
+                                name="front_image"
+                                type="file"
+                                accept="image/*"
+                                onChange={
+                                    handleFileChange
+                                }
+                            />
+                        </div>
 
-                <div
-                    style={{
-                        marginBottom: "15px"
-                    }}
-                >
-                    <label>
-                        Back Image
-                        (Optional)
-                    </label>
+                        <div
+                            style={{
+                                marginBottom:
+                                    "15px"
+                            }}
+                        >
+                            <label>
+                                Back Image
+                                (Optional)
+                            </label>
 
-                    <br />
+                            <br />
 
-                    <input
-                        id="back_image"
-                        name="back_image"
-                        type="file"
-                        accept="image/*"
-                        onChange={
-                            handleFileChange
-                        }
-                    />
-                </div>
+                            <input
+                                id="back_image"
+                                name="back_image"
+                                type="file"
+                                accept="image/*"
+                                onChange={
+                                    handleFileChange
+                                }
+                            />
+                        </div>
+                    </>
+                }
 
                 <button
                     type="submit"
                     style={{
                         padding:
                             "10px 20px",
-                        fontSize: "16px"
+                        fontSize:
+                            "16px"
                     }}
                 >
-                    Create Card
+                    {
+                        isEditing
+                            ? "Save Version"
+                            : "Create Card"
+                    }
                 </button>
+
+                {
+                    isEditing &&
+                    (
+                        <button
+                            type="button"
+                            onClick={() => {
+
+                                setForm(
+                                    initialForm
+                                );
+
+                                setEditingCard(
+                                    null
+                                );
+
+                                setIsEditing(
+                                    false
+                                );
+                            }}
+                            style={{
+                                marginLeft:
+                                    "10px"
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    )
+                }
 
             </form>
 
@@ -428,6 +524,10 @@ function AdminPg() {
 
             <CardCatalog
                 key={refreshKey}
+                isAdmin={true}
+                onEdit={
+                    loadCardForEdit
+                }
             />
 
         </div>

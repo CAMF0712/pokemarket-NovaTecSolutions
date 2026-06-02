@@ -576,11 +576,39 @@ namespace PokeGrading.Controllers
                 {"created_by", input.created_by}
                     });
 
-                    //----------------------------------
-                    // Update Current Version
-                    //----------------------------------
+            _database.ExecuteNonQuery(
+            @"
+            INSERT INTO CARD_IMAGES
+            (
+                image_id,
+                version_id,
+                image_type,
+                image_url
+            )
+            SELECT
+                NEWID(),
+                @new_version_id,
+                image_type,
+                image_url
+            FROM CARD_IMAGES
+            WHERE version_id =
+            (
+                SELECT current_version_id
+                FROM CARDS
+                WHERE card_id = @card_id
+            )
+            ",
+            new()
+            {
+                {"new_version_id", versionId},
+                {"card_id", input.card_id}
+            });
 
-                    _database.ExecuteNonQuery(
+            //----------------------------------
+            // Update Current Version
+            //----------------------------------
+
+            _database.ExecuteNonQuery(
                     @"
             UPDATE CARDS
             SET current_version_id = @version_id
@@ -637,34 +665,98 @@ namespace PokeGrading.Controllers
         [HttpGet("catalog")]
         public IActionResult GetCatalog()
         {
-                var cards =
-                    _database.Query(
+            var cards =
+                _database.Query(
+                @"
+        SELECT
+            c.card_id,
+            cv.version_id,
+
+            cv.name AS card_name,
+            cv.set_name,
+            cv.card_number,
+
+            cv.edition,
+            cv.language,
+            cv.finish_type,
+
+            cv.rarity,
+            cv.pokemon_type,
+            cv.hp,
+
+            cv.illustrator,
+            cv.release_year,
+
+            ci.image_url
+
+        FROM CARDS c
+
+        INNER JOIN CARD_VERSIONS cv
+            ON c.current_version_id =
+               cv.version_id
+
+        LEFT JOIN CARD_IMAGES ci
+            ON cv.version_id =
+               ci.version_id
+            AND ci.image_type = 'FRONT'
+
+        WHERE c.active = 1
+
+        ORDER BY cv.name
+        ",
+                new()
+                );
+
+            return Ok(cards);
+        }
+
+        [HttpGet("{cardId}")]
+        public IActionResult GetCard(
+        Guid cardId)
+            {
+                var card =
+                    _database.QuerySingleOrDefault<dynamic>(
                     @"
             SELECT
                 c.card_id,
-                cv.version_id,
-                cv.name AS card_name,
-                cv.set_name,
-                cv.card_number,
-                cv.rarity,
-                cv.pokemon_type,
-                cv.hp,
-                ci.image_url
+                cv.*
             FROM CARDS c
             INNER JOIN CARD_VERSIONS cv
                 ON c.current_version_id =
                    cv.version_id
-            LEFT JOIN CARD_IMAGES ci
-                ON cv.version_id =
-                   ci.version_id
-                AND ci.image_type = 'FRONT'
-            WHERE c.active = 1
-            ORDER BY cv.name
+            WHERE c.card_id = @card_id
             ",
                     new()
-                    );
+                    {
+                {"card_id", cardId}
+                    });
 
-                return Ok(cards);
+                if (card == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(card);
+        }
+
+        [HttpGet("{cardId}/versions")]
+        public IActionResult GetVersions(
+        Guid cardId)
+            {
+                var versions =
+                    _database.Query(
+                    @"
+            SELECT *
+            FROM CARD_VERSIONS
+            WHERE card_id = @card_id
+            ORDER BY created_at DESC
+            ",
+                    new()
+                    {
+                {"card_id", cardId}
+                    });
+
+                return Ok(versions);
         }
 
     }
