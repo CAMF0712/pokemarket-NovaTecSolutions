@@ -3,9 +3,6 @@ import axios from "axios";
 import ImageSearch
     from "./ImageSearch";
 
-import ImageSearchResults
-    from "./ImageSearchResults";
-
 function CardCatalog({
     isAdmin = false,
     onEdit = null
