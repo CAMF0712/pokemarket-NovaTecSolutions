@@ -233,3 +233,20 @@ NULL,
 GETUTCDATE()
 );
 GO
+
+INSERT INTO ALGORITHM_VERSIONS
+(
+    version_id,
+    version_name,
+    description,
+    created_at,
+    active
+)
+VALUES
+(
+    NEWID(),
+    'v1.0',
+    'Initial grading algorithm',
+    GETUTCDATE(),
+    1
+);
