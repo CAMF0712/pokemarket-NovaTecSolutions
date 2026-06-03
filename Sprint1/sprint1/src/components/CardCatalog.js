@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import ImageSearch
+    from "./ImageSearch";
+
+import ImageSearchResults
+    from "./ImageSearchResults";
 
 function CardCatalog({
     isAdmin = false,
@@ -11,6 +16,12 @@ function CardCatalog({
 
     const [loading,
         setLoading] = useState(true);
+
+    const [searchResult,
+        setSearchResult] = useState(null);
+
+    const [uploadedImage,
+        setUploadedImage] = useState(null);
 
     useEffect(() => {
 
@@ -44,6 +55,18 @@ function CardCatalog({
         }
     };
 
+    const handleImageResults =
+        (file, result) => {
+            setUploadedImage(file);
+            setSearchResult(result);
+        };
+
+    const clearImageSearch =
+        () => {
+            setUploadedImage(null);
+            setSearchResult(null);
+        };
+
     if (loading) {
 
         return (
@@ -63,12 +86,149 @@ function CardCatalog({
     }
 
     return (
-
         <div>
 
             <h2>
                 Card Catalog
             </h2>
+
+            <ImageSearch
+                onResults={
+                    handleImageResults
+                }
+            />
+
+            {
+                searchResult &&
+                (
+                    <div
+                        style={{
+                            border: "2px solid #4caf50",
+                            borderRadius: "10px",
+                            padding: "20px",
+                            marginBottom: "20px",
+                            background: "#f8fff8"
+                        }}
+                    >
+
+                        <h3>
+                            Search Results
+                        </h3>
+
+                        <button
+                            onClick={
+                                clearImageSearch
+                            }
+                            style={{
+                                marginBottom:
+                                    "15px"
+                            }}
+                        >
+                            Clear Search
+                        </button>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "20px",
+                                alignItems:
+                                    "flex-start"
+                            }}
+                        >
+
+                            {
+                                uploadedImage &&
+                                (
+                                    <div>
+
+                                        <h4>
+                                            Uploaded Image
+                                        </h4>
+
+                                        <img
+                                            src={
+                                                URL.createObjectURL(
+                                                    uploadedImage
+                                                )
+                                            }
+                                            alt=""
+                                            width={220}
+                                        />
+
+                                    </div>
+                                )
+                            }
+
+                            <div>
+
+                                <h4>
+                                    Matches
+                                </h4>
+
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: "15px",
+                                        flexWrap:
+                                            "wrap"
+                                    }}
+                                >
+
+                                    {
+                                        searchResult
+                                            .candidate_matches
+                                            ?.map(
+                                                match => (
+
+                                                    <div
+                                                        key={
+                                                            match.card.card_id
+                                                        }
+                                                        style={{
+                                                            width:
+                                                                "180px"
+                                                        }}
+                                                    >
+
+                                                        <img
+                                                            src={
+                                                                `https://localhost:7271${match.card.image_url}`
+                                                            }
+                                                            alt=""
+                                                            style={{
+                                                                width:
+                                                                    "100%"
+                                                            }}
+                                                        />
+
+                                                        <strong>
+                                                            {
+                                                                match.card.card_name
+                                                            }
+                                                        </strong>
+
+                                                        <br />
+
+                                                        Score:
+                                                        {" "}
+                                                        {
+                                                            match.score
+                                                        }
+
+                                                    </div>
+                                                )
+                                            )
+                                    }
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                )
+            }
 
             <div
                 style={{

@@ -3,6 +3,8 @@ using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Utilities;
 using SixLabors.ImageSharp;
+using Tesseract;
+using FuzzySharp;
 
 
 namespace PokeGrading.Controllers
@@ -710,7 +712,405 @@ namespace PokeGrading.Controllers
             return Ok(cards);
         }
 
-        [HttpGet("{cardId}")]
+        [HttpPost("search-by-image")]
+        public async Task<IActionResult> SearchByImage(
+            IFormFile image)
+        {
+            //----------------------------------
+            // Validation
+            //----------------------------------
+
+            if (image == null)
+            {
+                return BadRequest(
+                    "Image required"
+                );
+            }
+
+            //----------------------------------
+            // Save temp image
+            //----------------------------------
+
+            string tempFolder =
+                Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "Temp");
+
+            if (!Directory.Exists(tempFolder))
+            {
+                Directory.CreateDirectory(
+                    tempFolder);
+            }
+
+            string tempFile =
+                Path.Combine(
+                    tempFolder,
+                    $"{Guid.NewGuid()}.jpg");
+
+            using (var stream =
+                new FileStream(
+                    tempFile,
+                    FileMode.Create))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            //----------------------------------
+            // OCR
+            //----------------------------------
+
+            string extractedText = "";
+
+            using (var engine =
+                new TesseractEngine(
+                    "./tessdata",
+                    "eng",
+                    EngineMode.Default))
+            {
+                using var img =
+                    Pix.LoadFromFile(
+                        tempFile);
+
+                using var page =
+                    engine.Process(img);
+
+                extractedText =
+                    page.GetText();
+            }
+
+            //----------------------------------
+            // Normalize
+            //----------------------------------
+
+            extractedText =
+                extractedText
+                    .Replace("\r", " ")
+                    .Replace("\n", " ")
+                    .Trim();
+
+            //----------------------------------
+            // Detect HP
+            //----------------------------------
+
+            int? detectedHp = null;
+
+            var hpMatch =
+                System.Text.RegularExpressions.Regex.Match(
+                    extractedText,
+                    @"(\d+)\s*HP|HP\s*(\d+)",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (hpMatch.Success)
+            {
+                string hpValue =
+                    !string.IsNullOrWhiteSpace(
+                        hpMatch.Groups[1].Value)
+                    ? hpMatch.Groups[1].Value
+                    : hpMatch.Groups[2].Value;
+
+                detectedHp =
+                    Convert.ToInt32(hpValue);
+            }
+
+            //----------------------------------
+            // Detect card number
+            //----------------------------------
+
+            string? detectedNumber = null;
+
+            var numberMatch =
+                System.Text.RegularExpressions.Regex.Match(
+                    extractedText,
+                    @"(\d{1,3})\s*/\s*(\d{1,3})");
+
+            if (numberMatch.Success)
+            {
+                detectedNumber =
+                    numberMatch.Groups[1].Value;
+            }
+
+            //----------------------------------
+            // Detect pokemon types
+            //----------------------------------
+
+            string[] types =
+                    {
+                "Grass",
+                "Fire",
+                "Water",
+                "Lightning",
+                "Psychic",
+                "Fighting",
+                "Darkness",
+                "Metal",
+                "Dragon",
+                "Fairy",
+                "Colorless"
+            };
+
+            string? detectedType = null;
+
+            foreach (var type in types)
+            {
+                if (extractedText.Contains(
+                    type,
+                    StringComparison
+                    .OrdinalIgnoreCase))
+                {
+                    detectedType = type;
+                    break;
+                }
+            }
+
+
+            //----------------------------------
+            // Search candidates
+            //----------------------------------
+
+            var candidates =
+                _database.Query(
+                @"
+                SELECT
+                    c.card_id,
+                    cv.version_id,
+                    cv.name AS card_name,
+                    cv.card_number,
+                    cv.hp,
+                    cv.pokemon_type,
+                    cv.set_name,
+                    cv.rarity,
+                    ci.image_url
+                FROM CARDS c
+                INNER JOIN CARD_VERSIONS cv
+                    ON c.current_version_id =
+                       cv.version_id
+                LEFT JOIN CARD_IMAGES ci
+                    ON cv.version_id =
+                       ci.version_id
+                   AND ci.image_type='FRONT'
+                WHERE c.active = 1
+                ",
+                new());
+
+            //----------------------------------
+            // Score matches
+            //----------------------------------
+
+            var results =
+                candidates
+                .Select(card =>
+                {
+                    int score = 0;
+
+                    string cardName =
+                        card.card_name?
+                        .ToString() ?? "";
+
+                    string cardNumber =
+                        card.card_number?
+                        .ToString() ?? "";
+
+                    string cardType =
+                        card.pokemon_type?
+                        .ToString() ?? "";
+
+                    int cardHp =
+                        card.hp ?? 0;
+
+                    //----------------------------------
+                    // Name Match
+                    //----------------------------------
+
+                    int tokenScore =
+                        Fuzz.TokenSetRatio(
+                            extractedText,
+                            cardName);
+
+                    int partialScore =
+                        Fuzz.PartialRatio(
+                            extractedText,
+                            cardName);
+
+                    int nameScore =
+                        Math.Max(
+                            tokenScore,
+                            partialScore);
+
+                    score += nameScore * 3;
+
+                    //----------------------------------
+                    // SetName match
+                    //----------------------------------
+
+                    string setName =
+                        card.set_name?
+                        .ToString() ?? "";
+
+                    int setScore =
+                        Fuzz.PartialRatio(
+                            extractedText.ToLower(),
+                            setName.ToLower());
+
+                    score += setScore;
+
+                    //----------------------------------
+                    // Card Number
+                    //----------------------------------
+
+                    if (
+                        !string.IsNullOrWhiteSpace(
+                            detectedNumber)
+                        &&
+                        cardNumber ==
+                        detectedNumber)
+                    {
+                        score += 250;
+                    }
+
+                    //----------------------------------
+                    // HP
+                    //----------------------------------
+
+                    if (
+                        detectedHp != null &&
+                        cardHp ==
+                        detectedHp)
+                    {
+                        score += 150;
+                    }
+
+                    //----------------------------------
+                    // Type
+                    //----------------------------------
+
+                    if (
+                        detectedType != null
+                        &&
+                        cardType.Equals(
+                            detectedType,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        score += 100;
+                    }
+
+                    Console.WriteLine(
+                        $"{cardName} => {score}");
+
+                    return new
+                    {
+                        score,
+                        card
+                    };
+                })
+                .Where(x => x.score >= 60)
+                .OrderByDescending(
+                    x => x.score)
+                .Take(10)
+                .ToList();
+
+            //----------------------------------
+            // Cleanup
+            //----------------------------------
+
+            if (System.IO.File.Exists(
+                tempFile))
+            {
+                System.IO.File.Delete(
+                    tempFile);
+            }
+
+            //----------------------------------
+            // Confidence validation
+            //----------------------------------
+
+            if (results.Count == 0)
+            {
+                return Ok(new
+                {
+                    found = false,
+                    extracted_text = extractedText
+                });
+            }
+
+            var bestMatch = results.First();
+
+            const int threshold = 30;
+
+            // Todas las cartas "cercanas"
+            // al mejor resultado
+            var filteredMatches =
+                results
+                    .Where(x =>
+                        bestMatch.score - x.score <= threshold)
+                    .ToList();
+
+            // Score mínimo para aceptar
+            if (bestMatch.score < 200)
+            {
+                return Ok(new
+                {
+                    found = false,
+                    reason = "LOW_CONFIDENCE",
+                    extracted_text = extractedText
+                });
+            }
+
+            // Confidence basada en el grupo cercano
+            double confidence;
+
+            if (filteredMatches.Count == 1)
+            {
+                confidence = 100;
+            }
+            else
+            {
+                var secondBest =
+                    filteredMatches
+                        .Skip(1)
+                        .First();
+
+                confidence =
+                    Math.Round(
+                        (
+                            (double)
+                            (bestMatch.score -
+                             secondBest.score)
+                            /
+                            bestMatch.score
+                        ) * 100,
+                        2);
+            }
+
+            //----------------------------------
+            // Response
+            //----------------------------------
+
+            return Ok(new
+            {
+                found = true,
+
+                confidence,
+
+                extracted_text =
+                    extractedText,
+
+                detected_hp =
+                    detectedHp,
+
+                detected_number =
+                    detectedNumber,
+
+                detected_type =
+                    detectedType,
+
+                best_match =
+                    bestMatch,
+
+                candidate_matches =
+                    filteredMatches
+            });
+        }
+            [HttpGet("{cardId}")]
         public IActionResult GetCard(
         Guid cardId)
             {
