@@ -1,0 +1,221 @@
+import { useState }
+    from "react";
+
+import axios
+    from "axios";
+
+import styles
+    from "./SubmitGrading.module.css";
+
+function SubmitGrading() {
+
+    const [cardId, setCardId] =
+        useState("");
+
+    const [frontImage, setFrontImage] =
+        useState(null);
+
+    const [backImage, setBackImage] =
+        useState(null);
+
+    const [loading, setLoading] =
+        useState(false);
+
+    const handleSubmit =
+        async (e) => {
+
+            e.preventDefault();
+
+            const usuario =
+                JSON.parse(
+                    localStorage.getItem(
+                        "usuario_actual"
+                    )
+                );
+
+            if (!usuario) {
+
+                alert(
+                    "Debe iniciar sesión"
+                );
+
+                return;
+            }
+
+            if (!frontImage) {
+
+                alert(
+                    "Debe adjuntar imagen frontal"
+                );
+
+                return;
+            }
+
+            try {
+
+                setLoading(true);
+
+                const formData =
+                    new FormData();
+
+                formData.append(
+                    "user_id",
+                    usuario.user_id
+                );
+
+                formData.append(
+                    "card_id",
+                    cardId
+                );
+
+                formData.append(
+                    "front_image",
+                    frontImage
+                );
+
+                if (backImage) {
+
+                    formData.append(
+                        "back_image",
+                        backImage
+                    );
+                }
+
+                const response =
+                    await axios.post(
+                        "https://localhost:7271/Grading/submit",
+                        formData,
+                        {
+                            headers: {
+                                "Content-Type":
+                                    "multipart/form-data"
+                            }
+                        }
+                    );
+
+                const result =
+                    response.data.data;
+
+                alert(
+                    `Grading enviado.\n\n` +
+                    `Grade: ${result.estimated_grade}\n` +
+                    `Confidence: ${result.confidence_score}%\n` +
+                    `Status: ${result.status}`
+                );
+
+                setCardId("");
+                setFrontImage(null);
+                setBackImage(null);
+
+            }
+            catch {
+
+                alert(
+                    "Error enviando grading"
+                );
+            }
+            finally {
+
+                setLoading(false);
+            }
+        };
+
+    return (
+
+        <div
+            className={
+                styles.container
+            }
+        >
+
+            <h2>
+                Submit Card For Grading
+            </h2>
+
+            <form
+                onSubmit={
+                    handleSubmit
+                }
+            >
+
+                <input
+                    type="text"
+                    placeholder="Card ID"
+                    value={cardId}
+                    onChange={(e) =>
+                        setCardId(
+                            e.target.value
+                        )
+                    }
+                    className={
+                        styles.input
+                    }
+                />
+
+                <div
+                    className={
+                        styles.fileGroup
+                    }
+                >
+
+                    <label>
+                        Front Image
+                    </label>
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                            setFrontImage(
+                                e.target.files[0]
+                            )
+                        }
+                    />
+
+                </div>
+
+                <div
+                    className={
+                        styles.fileGroup
+                    }
+                >
+
+                    <label>
+                        Back Image
+                    </label>
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                            setBackImage(
+                                e.target.files[0]
+                            )
+                        }
+                    />
+
+                </div>
+
+                <button
+                    type="submit"
+                    className={
+                        styles.button
+                    }
+                    disabled={loading}
+                >
+
+                    {
+                        loading
+                            ? "Sending..."
+                            : "Submit Grading"
+                    }
+
+                </button>
+
+            </form>
+
+        </div>
+    );
+}
+
+export default SubmitGrading;
