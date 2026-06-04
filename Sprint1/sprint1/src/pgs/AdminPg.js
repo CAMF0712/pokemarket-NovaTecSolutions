@@ -1,4 +1,5 @@
 import { useState } from "react";
+import styles from "./AdminPg.module.css";
 import axios from "axios";
 import CardCatalog
     from "../components/CardCatalog";
@@ -262,17 +263,9 @@ function AdminPg() {
 
     return (
 
-        <div
-            style={{
-                maxWidth: "900px",
-                margin: "40px auto",
-                padding: "30px",
-                border: "1px solid #ddd",
-                borderRadius: "10px"
-            }}
-        >
+        <div className={styles.adminContainer}>
 
-            <h1>
+            <h1 className={styles.title}>
                 {
                     isEditing
                         ? "Edit Pokémon Card"
@@ -282,16 +275,10 @@ function AdminPg() {
 
             <form onSubmit={addCard}>
 
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns:
-                            "1fr 1fr",
-                        gap: "15px"
-                    }}
-                >
+                <div className={styles.formGrid}>
 
                     <input
+                        className={styles.input}
                         name="card_name"
                         placeholder="Card Name"
                         value={form.card_name}
@@ -299,6 +286,7 @@ function AdminPg() {
                     />
 
                     <input
+                        className={styles.input}
                         name="set_name"
                         placeholder="Set Name"
                         value={form.set_name}
@@ -306,6 +294,7 @@ function AdminPg() {
                     />
 
                     <input
+                        className={styles.input}
                         name="card_number"
                         placeholder="Card Number"
                         value={form.card_number}
@@ -313,6 +302,7 @@ function AdminPg() {
                     />
 
                     <input
+                        className={styles.input}
                         name="hp"
                         type="number"
                         placeholder="HP"
@@ -321,6 +311,7 @@ function AdminPg() {
                     />
 
                     <input
+                        className={styles.input}
                         name="illustrator"
                         placeholder="Illustrator"
                         value={form.illustrator}
@@ -328,6 +319,7 @@ function AdminPg() {
                     />
 
                     <input
+                        className={styles.input}
                         name="release_year"
                         type="number"
                         placeholder="Release Year"
@@ -336,6 +328,7 @@ function AdminPg() {
                     />
 
                     <select
+                        className={styles.select}
                         name="edition"
                         value={form.edition}
                         onChange={handleChange}
@@ -349,6 +342,7 @@ function AdminPg() {
                     </select>
 
                     <select
+                        className={styles.select}
                         name="language"
                         value={form.language}
                         onChange={handleChange}
@@ -366,6 +360,7 @@ function AdminPg() {
                     </select>
 
                     <select
+                        className={styles.select}
                         name="finish_type"
                         value={form.finish_type}
                         onChange={handleChange}
@@ -380,6 +375,7 @@ function AdminPg() {
                     </select>
 
                     <select
+                        className={styles.select}
                         name="rarity"
                         value={form.rarity}
                         onChange={handleChange}
@@ -396,6 +392,7 @@ function AdminPg() {
                     </select>
 
                     <select
+                        className={styles.select}
                         name="pokemon_type"
                         value={form.pokemon_type}
                         onChange={handleChange}
@@ -418,118 +415,87 @@ function AdminPg() {
 
                 </div>
 
-                <hr />
+                <hr className={styles.divider} />
 
                 {
                     !isEditing &&
                     <>
-                        <div
-                            style={{
-                                marginBottom:
-                                    "15px"
-                            }}
-                        >
-                            <label>
-                                Front Image
-                                (Required)
+                        <div className={styles.fileSection}>
+                            <label className={styles.fileLabel}>
+                                Front Image (Required)
                             </label>
-
-                            <br />
 
                             <input
                                 id="front_image"
                                 name="front_image"
                                 type="file"
                                 accept="image/*"
-                                onChange={
-                                    handleFileChange
-                                }
+                                onChange={handleFileChange}
                             />
                         </div>
 
-                        <div
-                            style={{
-                                marginBottom:
-                                    "15px"
-                            }}
-                        >
-                            <label>
-                                Back Image
-                                (Optional)
+                        <div className={styles.fileSection}>
+                            <label className={styles.fileLabel}>
+                                Back Image (Optional)
                             </label>
-
-                            <br />
 
                             <input
                                 id="back_image"
                                 name="back_image"
                                 type="file"
                                 accept="image/*"
-                                onChange={
-                                    handleFileChange
-                                }
+                                onChange={handleFileChange}
                             />
                         </div>
                     </>
                 }
 
-                <button
-                    type="submit"
-                    style={{
-                        padding:
-                            "10px 20px",
-                        fontSize:
-                            "16px"
-                    }}
-                >
+                <div className={styles.actions}>
+
+                    <button
+                        type="submit"
+                        className={styles.button}
+                    >
+                        {
+                            isEditing
+                                ? "Save Version"
+                                : "Create Card"
+                        }
+                    </button>
+
                     {
-                        isEditing
-                            ? "Save Version"
-                            : "Create Card"
+                        isEditing &&
+                        (
+                            <button
+                                type="button"
+                                className={styles.cancelButton}
+                                onClick={() => {
+
+                                    setForm(initialForm);
+
+                                    setEditingCard(null);
+
+                                    setIsEditing(false);
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        )
                     }
-                </button>
 
-                {
-                    isEditing &&
-                    (
-                        <button
-                            type="button"
-                            onClick={() => {
-
-                                setForm(
-                                    initialForm
-                                );
-
-                                setEditingCard(
-                                    null
-                                );
-
-                                setIsEditing(
-                                    false
-                                );
-                            }}
-                            style={{
-                                marginLeft:
-                                    "10px"
-                            }}
-                        >
-                            Cancel
-                        </button>
-                    )
-                }
+                </div>
 
             </form>
 
-            <hr />
+            <hr className={styles.divider} />
 
-            <CardCatalog
-                key={refreshKey}
-                isAdmin={true}
-                onEdit={
-                    loadCardForEdit
-                }
-            />
-
+            <div className={styles.catalogSection}>
+                <CardCatalog
+                    key={refreshKey}
+                    isAdmin={true}
+                    onEdit={loadCardForEdit}
+                />
+            </div>
         </div>
     );
 }
