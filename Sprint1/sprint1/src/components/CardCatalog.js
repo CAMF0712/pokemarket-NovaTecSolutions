@@ -5,7 +5,8 @@ import ImageSearch
 
 function CardCatalog({
     isAdmin = false,
-    onEdit = null
+    onEdit = null,
+    onEvaluate = null
 }) {
 
     const [cards,
@@ -320,6 +321,25 @@ function CardCatalog({
                                 {" "}
                                 {card.hp}
                             </p>
+
+                            {
+                                !isAdmin &&
+                                onEvaluate &&
+                                (
+                                    <button
+                                        onClick={() =>
+                                            onEvaluate(card)
+                                        }
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px",
+                                            marginTop: "10px"
+                                        }}
+                                    >
+                                        Submit For Grading
+                                    </button>
+                                )
+                            }
 
                             {
                                 isAdmin &&

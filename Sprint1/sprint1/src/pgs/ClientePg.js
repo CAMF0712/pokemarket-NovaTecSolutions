@@ -6,8 +6,11 @@ import SubmitGrading
 
 import styles
     from "./ClientePg.module.css";
+import {useState} from "react";
 
 function ClientePg() {
+    const [selectedCard,
+        setSelectedCard] = useState(null);
 
     return (
 
@@ -25,9 +28,13 @@ function ClientePg() {
                 Pokémon Catalog
             </h1>
 
-            <SubmitGrading />
+            <SubmitGrading
+                selectedCard={selectedCard}
+            />
 
-            <CardCatalog />
+            <CardCatalog
+                onEvaluate={setSelectedCard}
+            />
 
         </div>
 

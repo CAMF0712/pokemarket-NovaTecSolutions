@@ -7,10 +7,8 @@ import axios
 import styles
     from "./SubmitGrading.module.css";
 
-function SubmitGrading() {
+function SubmitGrading({selectedCard}) {
 
-    const [cardId, setCardId] =
-        useState("");
 
     const [frontImage, setFrontImage] =
         useState(null);
@@ -42,6 +40,15 @@ function SubmitGrading() {
                 return;
             }
 
+            if (!selectedCard)
+            {
+                alert(
+                    "Debe seleccionar una carta del catálogo."
+                );
+
+                return;
+            }
+
             if (!frontImage) {
 
                 alert(
@@ -65,7 +72,7 @@ function SubmitGrading() {
 
                 formData.append(
                     "card_id",
-                    cardId
+                    selectedCard.card_id
                 );
 
                 formData.append(
@@ -103,7 +110,6 @@ function SubmitGrading() {
                     `Status: ${result.status}`
                 );
 
-                setCardId("");
                 setFrontImage(null);
                 setBackImage(null);
 
@@ -138,19 +144,30 @@ function SubmitGrading() {
                 }
             >
 
-                <input
-                    type="text"
-                    placeholder="Card ID"
-                    value={cardId}
-                    onChange={(e) =>
-                        setCardId(
-                            e.target.value
-                        )
-                    }
-                    className={
-                        styles.input
-                    }
-                />
+                {
+                    selectedCard &&
+                    (
+                        <div
+                            className={
+                                styles.cardInfo
+                            }
+                        >
+
+                            <h3>
+                                Selected Card
+                            </h3>
+
+                            <p>
+                                {selectedCard.card_name}
+                            </p>
+
+                            <p>
+                                {selectedCard.set_name}
+                            </p>
+
+                        </div>
+                    )
+                }
 
                 <div
                     className={
@@ -201,7 +218,10 @@ function SubmitGrading() {
                     className={
                         styles.button
                     }
-                    disabled={loading}
+                    disabled={
+                        loading ||
+                        !selectedCard
+                    }
                 >
 
                     {
