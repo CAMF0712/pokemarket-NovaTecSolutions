@@ -158,11 +158,34 @@ function SubmitGrading({selectedCard}) {
                             </h3>
 
                             <p>
-                                {selectedCard.card_name}
+                                <strong>
+                                    {selectedCard.card_name}
+                                </strong>
                             </p>
 
                             <p>
+                                Set:
+                                {" "}
                                 {selectedCard.set_name}
+                            </p>
+
+                            <p>
+                                Number:
+                                {" "}
+                                {selectedCard.card_number}
+                            </p>
+
+                            <p
+                                className={
+                                    styles.infoText
+                                }
+                            >
+                                Please upload photos of your
+                                own physical card for
+                                evaluation. The grading
+                                process analyzes the images
+                                you provide, not the catalog
+                                reference image.
                             </p>
 
                         </div>
