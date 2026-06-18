@@ -4,6 +4,7 @@ import axios from "axios";
 import CardCatalog
     from "../components/CardCatalog";
 import { buildApiUrl } from "../config/api";
+import {useNavigate} from "react-router-dom";
 
 function AdminPg() {
 
@@ -24,6 +25,24 @@ function AdminPg() {
     const [isEditing,
         setIsEditing] =
         useState(false);
+
+    const navigate =
+        useNavigate();
+
+    const logout = () => {
+
+        localStorage.removeItem(
+            "usuario_actual"
+        );
+
+        navigate(
+            "/login",
+            {
+                replace: true
+            }
+        );
+    };
+
 
     const initialForm = {
 
@@ -265,6 +284,14 @@ function AdminPg() {
     return (
 
         <div className={styles.adminContainer}>
+
+            <button
+                type="button"
+                className={styles.logoutButton}
+                onClick={logout}
+            >
+                Logout
+            </button>
 
             <h1 className={styles.title}>
                 {

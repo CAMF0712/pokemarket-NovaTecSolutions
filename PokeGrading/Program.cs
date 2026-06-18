@@ -63,10 +63,7 @@ if (app.Environment.IsDevelopment())
 
 
 // HTTPS
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+app.UseHttpsRedirection();
 
 
 // CORS

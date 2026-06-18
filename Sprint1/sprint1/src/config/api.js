@@ -1,5 +1,5 @@
 const DEFAULT_API_BASE_URL =
-    `http://${window.location.hostname}:5164`;
+    `https://${window.location.hostname}:7271`;
 
 export const API_BASE_URL =
     process.env.REACT_APP_API_BASE_URL ||
