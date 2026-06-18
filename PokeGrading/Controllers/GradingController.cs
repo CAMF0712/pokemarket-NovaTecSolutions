@@ -9,6 +9,9 @@ namespace PokeGrading.Controllers
     [Route("[controller]")]
     public class GradingController : ControllerBase
     {
+        private const decimal ConfidenceThresholdForCompletedStatus = 85m;
+        private const int ActiveAlgorithmFlag = 1;
+
         private readonly DatabaseService _database;
 
         private readonly IWebHostEnvironment _environment;
@@ -183,7 +186,7 @@ namespace PokeGrading.Controllers
             //-----------------------------------
 
             string status =
-                confidence >= 85
+                confidence >= ConfidenceThresholdForCompletedStatus
                 ?
                 "COMPLETED"
                 :
@@ -198,9 +201,12 @@ namespace PokeGrading.Controllers
                 @"
                 SELECT TOP 1 version_id
                 FROM ALGORITHM_VERSIONS
-                WHERE active = 1
+                WHERE active = @active
                 ",
-                new());
+                new()
+                {
+                    {"active", ActiveAlgorithmFlag}
+                });
 
             //-----------------------------------
             // IDs

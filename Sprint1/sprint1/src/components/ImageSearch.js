@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { buildApiUrl } from "../config/api";
 
 export default function ImageSearch({
     onResults
@@ -32,7 +33,7 @@ export default function ImageSearch({
         try {
             const response =
                 await fetch(
-                    "https://localhost:7271/Card/search-by-image",
+                    buildApiUrl("/Card/search-by-image"),
                     {
                         method: "POST",
                         body: formData

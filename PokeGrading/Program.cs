@@ -3,6 +3,15 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+const string ReactCorsOriginsSection = "Cors:AllowedOrigins";
+
+string[] allowedOrigins =
+    builder.Configuration
+        .GetSection(ReactCorsOriginsSection)
+        .Get<string[]>()
+    ??
+    Array.Empty<string>();
+
 
 // Controllers
 builder.Services.AddControllers();
@@ -20,13 +29,19 @@ builder.Services.AddCors(options =>
         "AllowReactFrontend",
         policy =>
         {
-            policy.WithOrigins(
-                    "http://localhost:3000",
-                    "https://localhost:3000"
-                )
+            if (allowedOrigins.Length > 0)
+            {
+                policy.WithOrigins(allowedOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+
+                return;
+            }
+
+            policy.AllowAnyOrigin()
                 .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
+                .AllowAnyMethod();
         });
 });
 
@@ -48,7 +63,10 @@ if (app.Environment.IsDevelopment())
 
 
 // HTTPS
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 
 // CORS

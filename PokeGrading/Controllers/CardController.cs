@@ -13,6 +13,22 @@ namespace PokeGrading.Controllers
     [Route("[controller]")]
     public class CardController : ControllerBase
     {
+        private const int MinimumImageWidth = 600;
+        private const int MinimumImageHeight = 600;
+        private const int MinimumHpValue = 0;
+        private const int ActiveCardFlag = 1;
+
+        private const int NameScoreWeight = 3;
+        private const int CardNumberExactMatchScore = 250;
+        private const int HpExactMatchScore = 150;
+        private const int TypeExactMatchScore = 100;
+        private const int MinimumCandidateScore = 60;
+        private const int MaximumCandidateMatches = 10;
+        private const int CandidateScoreWindow = 30;
+        private const int MinimumBestMatchScore = 200;
+        private const int FullConfidencePercentage = 100;
+        private const int ConfidenceRoundingDecimals = 2;
+
         private readonly DatabaseService _database;
 
         public CardController(DatabaseService database)
@@ -67,8 +83,8 @@ namespace PokeGrading.Controllers
                 SixLabors.ImageSharp.Image.Load(
                     input.front_image.OpenReadStream()))
             {
-                if (image.Width < 600 ||
-                    image.Height < 600)
+                if (image.Width < MinimumImageWidth ||
+                    image.Height < MinimumImageHeight)
                 {
                     return BadRequest(
                         "Image resolution too low"
@@ -150,7 +166,7 @@ namespace PokeGrading.Controllers
             // HP validation
             //----------------------------------
 
-            if (input.hp <= 0)
+            if (input.hp <= MinimumHpValue)
             {
                 return BadRequest(
                     "HP must be greater than zero"
@@ -290,14 +306,15 @@ namespace PokeGrading.Controllers
             (
                 @card_id,
                 @created_by,
-                1,
+                @active,
                 GETUTCDATE()
             )
             ",
             new()
             {
                 {"card_id",cardId},
-                {"created_by",input.created_by}
+                {"created_by",input.created_by},
+                {"active", ActiveCardFlag}
             });
 
             //----------------------------------
@@ -702,12 +719,14 @@ namespace PokeGrading.Controllers
                ci.version_id
             AND ci.image_type = 'FRONT'
 
-        WHERE c.active = 1
+        WHERE c.active = @active
 
         ORDER BY cv.name
         ",
                 new()
-                );
+                {
+                    {"active", ActiveCardFlag}
+                });
 
             return Ok(cards);
         }
@@ -888,9 +907,12 @@ namespace PokeGrading.Controllers
                     ON cv.version_id =
                        ci.version_id
                    AND ci.image_type='FRONT'
-                WHERE c.active = 1
+                WHERE c.active = @active
                 ",
-                new());
+                new()
+                {
+                    {"active", ActiveCardFlag}
+                });
 
             //----------------------------------
             // Score matches
@@ -936,7 +958,7 @@ namespace PokeGrading.Controllers
                             tokenScore,
                             partialScore);
 
-                    score += nameScore * 3;
+                    score += nameScore * NameScoreWeight;
 
                     //----------------------------------
                     // SetName match
@@ -964,7 +986,7 @@ namespace PokeGrading.Controllers
                         cardNumber ==
                         detectedNumber)
                     {
-                        score += 250;
+                        score += CardNumberExactMatchScore;
                     }
 
                     //----------------------------------
@@ -976,7 +998,7 @@ namespace PokeGrading.Controllers
                         cardHp ==
                         detectedHp)
                     {
-                        score += 150;
+                        score += HpExactMatchScore;
                     }
 
                     //----------------------------------
@@ -990,7 +1012,7 @@ namespace PokeGrading.Controllers
                             detectedType,
                             StringComparison.OrdinalIgnoreCase))
                     {
-                        score += 100;
+                        score += TypeExactMatchScore;
                     }
 
                     Console.WriteLine(
@@ -1002,10 +1024,10 @@ namespace PokeGrading.Controllers
                         card
                     };
                 })
-                .Where(x => x.score >= 60)
+                .Where(x => x.score >= MinimumCandidateScore)
                 .OrderByDescending(
                     x => x.score)
-                .Take(10)
+                .Take(MaximumCandidateMatches)
                 .ToList();
 
             //----------------------------------
@@ -1034,18 +1056,18 @@ namespace PokeGrading.Controllers
 
             var bestMatch = results.First();
 
-            const int threshold = 30;
+            const int scoreWindowThreshold = CandidateScoreWindow;
 
             // Todas las cartas "cercanas"
             // al mejor resultado
             var filteredMatches =
                 results
                     .Where(x =>
-                        bestMatch.score - x.score <= threshold)
+                        bestMatch.score - x.score <= scoreWindowThreshold)
                     .ToList();
 
             // Score mínimo para aceptar
-            if (bestMatch.score < 200)
+            if (bestMatch.score < MinimumBestMatchScore)
             {
                 return Ok(new
                 {
@@ -1060,7 +1082,7 @@ namespace PokeGrading.Controllers
 
             if (filteredMatches.Count == 1)
             {
-                confidence = 100;
+                confidence = FullConfidencePercentage;
             }
             else
             {
@@ -1077,8 +1099,8 @@ namespace PokeGrading.Controllers
                              secondBest.score)
                             /
                             bestMatch.score
-                        ) * 100,
-                        2);
+                        ) * FullConfidencePercentage,
+                        ConfidenceRoundingDecimals);
             }
 
             //----------------------------------

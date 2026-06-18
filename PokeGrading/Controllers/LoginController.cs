@@ -10,6 +10,9 @@ namespace PokeGrading.Controllers
     [Route("[controller]")]
     public class LoginController : ControllerBase
     {
+        private const int AdminRoleId = 3;
+        private const int ModeratorRoleId = 2;
+
         private readonly DatabaseService _databaseService;
 
         public LoginController(DatabaseService databaseService)
@@ -21,10 +24,6 @@ namespace PokeGrading.Controllers
         public ActionResult<Data_response<Data_output_login>>
         Login([FromBody] Data_input_login input)
         {
-            string passwordHash =
-                PasswordService.HashPassword(
-                    input.password);
-
             var user =
                 _databaseService.QuerySingleOrDefault<User>(
                 @"
@@ -57,7 +56,7 @@ namespace PokeGrading.Controllers
                 });
             }
 
-            if (user.PasswordHash != passwordHash)
+            if (!PasswordService.VerifyPassword(input.password, user.PasswordHash))
             {
                 return Unauthorized(new
                 {
@@ -88,8 +87,8 @@ namespace PokeGrading.Controllers
             string roleName =
                 user.RoleId switch
                 {
-                    3 => "ADMIN",
-                    2 => "MODERATOR",
+                    AdminRoleId => "ADMIN",
+                    ModeratorRoleId => "MODERATOR",
                     _ => "SUBMITTER"
                 };
 

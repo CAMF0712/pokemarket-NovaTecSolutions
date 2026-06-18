@@ -5,6 +5,9 @@ namespace PokeGrading.Utilities
 {
     public static class ImageValidationService
     {
+        private const int MinSupportedImageWidth = 600;
+        private const int MinSupportedImageHeight = 600;
+
         public static bool IsValidImage(
             IFormFile file)
         {
@@ -18,9 +21,9 @@ namespace PokeGrading.Utilities
                         file.OpenReadStream());
 
                 return
-                    image.Width >= 600
+                    image.Width >= MinSupportedImageWidth
                     &&
-                    image.Height >= 600;
+                    image.Height >= MinSupportedImageHeight;
             }
             catch
             {

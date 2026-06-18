@@ -6,6 +6,7 @@ import axios
 
 import styles
     from "./SubmitGrading.module.css";
+import { buildApiUrl } from "../config/api";
 
 function SubmitGrading({selectedCard}) {
 
@@ -90,7 +91,7 @@ function SubmitGrading({selectedCard}) {
 
                 const response =
                     await axios.post(
-                        "https://localhost:7271/Grading/submit",
+                        buildApiUrl("/Grading/submit"),
                         formData,
                         {
                             headers: {

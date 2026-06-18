@@ -3,6 +3,7 @@ import styles from "./AdminPg.module.css";
 import axios from "axios";
 import CardCatalog
     from "../components/CardCatalog";
+import { buildApiUrl } from "../config/api";
 
 function AdminPg() {
 
@@ -145,7 +146,7 @@ function AdminPg() {
             if (isEditing) {
 
                 await axios.post(
-                    "https://localhost:7271/Card/version",
+                    buildApiUrl("/Card/version"),
                     {
                         card_id:
                             editingCard.card_id,
@@ -201,7 +202,7 @@ function AdminPg() {
                     });
 
                 await axios.post(
-                    "https://localhost:7271/Card/create",
+                    buildApiUrl("/Card/create"),
                     formData,
                     {
                         headers: {
