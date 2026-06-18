@@ -28,6 +28,11 @@ namespace PokeGrading.Controllers
             _database = database;
         }
 
+        /// <summary>
+        /// Busca cartas en el catálogo usando OCR sobre la imagen enviada.
+        /// Extrae texto, detecta HP, número y tipo, y calcula un score de similitud
+        /// contra todas las cartas activas para devolver los mejores candidatos.
+        /// </summary>
         [HttpPost("search-by-image")]
         public async Task<IActionResult> SearchByImage(IFormFile image)
         {
@@ -43,20 +48,40 @@ namespace PokeGrading.Controllers
                 Directory.CreateDirectory(tempFolder);
             }
 
+            // El archivo temporal se limpia en el finally
+            // para garantizar que se borre incluso si ocurre una excepción
             string tempFile = Path.Combine(tempFolder, $"{Guid.NewGuid()}.jpg");
-
-            using (var stream = new FileStream(tempFile, FileMode.Create))
-            {
-                await image.CopyToAsync(stream);
-            }
-
             string extractedText = "";
 
-            using (var engine = new TesseractEngine("./tessdata", "eng", EngineMode.Default))
+            try
             {
-                using var img = Pix.LoadFromFile(tempFile);
-                using var page = engine.Process(img);
-                extractedText = page.GetText();
+                using (var stream = new FileStream(tempFile, FileMode.Create))
+                {
+                    await image.CopyToAsync(stream);
+                }
+
+                // Programación defensiva: si tessdata no existe o la imagen es inválida
+                // se captura la excepción y se retorna un error controlado
+                try
+                {
+                    using var engine = new TesseractEngine("./tessdata", "eng", EngineMode.Default);
+                    using var img = Pix.LoadFromFile(tempFile);
+                    using var page = engine.Process(img);
+                    extractedText = page.GetText();
+                }
+                catch (Exception)
+                {
+                    return BadRequest("Image could not be processed");
+                }
+            }
+            finally
+            {
+                // Programación defensiva: garantiza limpieza del archivo temporal
+                // independientemente del flujo de ejecución
+                if (System.IO.File.Exists(tempFile))
+                {
+                    System.IO.File.Delete(tempFile);
+                }
             }
 
             extractedText = extractedText.Replace("\r", " ").Replace("\n", " ").Trim();
@@ -75,7 +100,12 @@ namespace PokeGrading.Controllers
                         ? hpMatch.Groups[1].Value
                         : hpMatch.Groups[2].Value;
 
-                detectedHp = Convert.ToInt32(hpValue);
+                // Programación defensiva: usar TryParse en lugar de Convert.ToInt32
+                // para evitar excepción si el valor extraído por OCR no es parseable
+                if (int.TryParse(hpValue, out int parsedHp))
+                {
+                    detectedHp = parsedHp;
+                }
             }
 
             string? detectedNumber = null;
@@ -230,11 +260,20 @@ namespace PokeGrading.Controllers
             }
             else
             {
-                var secondBest = filteredMatches.Skip(1).First();
+                // Programación defensiva: verificar que existan al menos 2 candidatos
+                // antes de acceder al segundo elemento para calcular la diferencia de score
+                if (filteredMatches.Count >= 2)
+                {
+                    var secondBest = filteredMatches.Skip(1).First();
 
-                confidence = Math.Round(
-                    ((double)(bestMatch.score - secondBest.score) / bestMatch.score) * FullConfidencePercentage,
-                    ConfidenceRoundingDecimals);
+                    confidence = Math.Round(
+                        ((double)(bestMatch.score - secondBest.score) / bestMatch.score) * FullConfidencePercentage,
+                        ConfidenceRoundingDecimals);
+                }
+                else
+                {
+                    confidence = FullConfidencePercentage;
+                }
             }
 
             return Ok(new

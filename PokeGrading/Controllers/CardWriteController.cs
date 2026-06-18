@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Utilities;
@@ -15,6 +16,14 @@ namespace PokeGrading.Controllers
         private const int MinimumHpValue = 0;
         private const int ActiveCardFlag = 1;
 
+        // Programación defensiva: longitudes máximas alineadas con las columnas de la BD
+        private const int MaxCardNameLength = 150;
+        private const int MaxSetNameLength = 150;
+        private const int MaxIllustratorLength = 100;
+
+        // Código de error SQL Server para violación de unique key
+        private const int SqlUniqueKeyViolationError = 2627;
+
         private readonly DatabaseService _database;
 
         public CardWriteController(DatabaseService database)
@@ -28,6 +37,17 @@ namespace PokeGrading.Controllers
         {
             if (string.IsNullOrWhiteSpace(input.card_name))
                 return BadRequest("Card name required");
+
+            // Programación defensiva: validar longitud de campos de texto
+            // para evitar excepciones de BD por columnas con límite de caracteres
+            if (input.card_name.Length > MaxCardNameLength)
+                return BadRequest($"Card name must not exceed {MaxCardNameLength} characters");
+
+            if (!string.IsNullOrWhiteSpace(input.set_name) && input.set_name.Length > MaxSetNameLength)
+                return BadRequest($"Set name must not exceed {MaxSetNameLength} characters");
+
+            if (!string.IsNullOrWhiteSpace(input.illustrator) && input.illustrator.Length > MaxIllustratorLength)
+                return BadRequest($"Illustrator must not exceed {MaxIllustratorLength} characters");
 
             if (string.IsNullOrWhiteSpace(input.set_name))
                 return BadRequest("Set name required");
@@ -49,12 +69,21 @@ namespace PokeGrading.Controllers
                 return BadRequest("Front image required");
             }
 
-            using (var image = Image.Load(input.front_image.OpenReadStream()))
+            // Programación defensiva: Image.Load puede lanzar si el archivo está corrupto
+            // o tiene un formato no soportado; se captura para devolver un error controlado
+            try
             {
-                if (image.Width < MinimumImageWidth || image.Height < MinimumImageHeight)
+                using (var image = Image.Load(input.front_image.OpenReadStream()))
                 {
-                    return BadRequest("Image resolution too low");
+                    if (image.Width < MinimumImageWidth || image.Height < MinimumImageHeight)
+                    {
+                        return BadRequest("Image resolution too low");
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                return BadRequest("Invalid image file");
             }
 
             string[] validTypes =
@@ -198,6 +227,11 @@ namespace PokeGrading.Controllers
                     {"active", ActiveCardFlag}
                 });
 
+            // Programación defensiva: captura violación de unique key para el caso
+            // de condición de carrera donde dos requests pasan el check de duplicado
+            // al mismo tiempo e intentan insertar la misma carta concurrentemente
+            try
+            {
             _database.ExecuteNonQuery(
                 @"
             INSERT INTO CARD_VERSIONS
@@ -254,6 +288,11 @@ namespace PokeGrading.Controllers
                     {"release_year", input.release_year},
                     {"created_by", input.created_by}
                 });
+            }
+            catch (SqlException ex) when (ex.Number == SqlUniqueKeyViolationError)
+            {
+                return Conflict("Card already exists");
+            }
 
             _database.ExecuteNonQuery(
                 @"
