@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import ImageSearch
     from "./ImageSearch";
+import { buildApiUrl } from "../config/api";
 
 function CardCatalog({
     isAdmin = false,
@@ -33,7 +34,7 @@ function CardCatalog({
 
             const response =
                 await axios.get(
-                    "https://localhost:7271/Card/catalog"
+                    buildApiUrl("/Card/catalog")
                 );
 
             setCards(response.data);
@@ -190,7 +191,7 @@ function CardCatalog({
 
                                                         <img
                                                             src={
-                                                                `https://localhost:7271${match.card.image_url}`
+                                                                buildApiUrl(match.card.image_url)
                                                             }
                                                             alt=""
                                                             style={{
@@ -259,7 +260,7 @@ function CardCatalog({
                                 (
                                     <img
                                         src={
-                                            `https://localhost:7271${card.image_url}`
+                                            buildApiUrl(card.image_url)
                                         }
                                         alt={
                                             card.card_name

@@ -10,6 +10,12 @@ namespace PokeGrading.Controllers
     [Route("[controller]")]
     public class RegisterController : ControllerBase
     {
+        private const int DefaultUserRoleId = 1;
+        private const int MinimumPasswordLength = 8;
+
+        private const string PasswordPolicyPattern =
+            @"^(?=.*[A-Z])(?=.*\d).{8,}$";
+
         private readonly DatabaseService _database;
 
         public RegisterController(DatabaseService database)
@@ -82,12 +88,12 @@ namespace PokeGrading.Controllers
 
             if (!Regex.IsMatch(
                 input.password,
-                @"^(?=.*[A-Z])(?=.*\d).{8,}$"))
+                PasswordPolicyPattern))
             {
                 return BadRequest(new
                 {
                     field = "password",
-                    message = "Password must contain at least one uppercase letter, one number and be at least 8 characters long."
+                    message = $"Password must contain at least one uppercase letter, one number and be at least {MinimumPasswordLength} characters long."
                 });
             }
 
@@ -186,7 +192,7 @@ namespace PokeGrading.Controllers
                 new Dictionary<string, object>
                 {
                     { "user_id", userId },
-                    { "role_id", 1 }, // USER
+                    { "role_id", DefaultUserRoleId }, // USER
                     { "email", input.email },
                     { "alias", input.alias },
                     { "password_hash", passwordHash },

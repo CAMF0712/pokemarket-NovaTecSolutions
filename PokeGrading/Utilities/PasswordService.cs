@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using BCryptNet = BCrypt.Net.BCrypt;
 
 namespace PokeGrading.Utilities
 {
@@ -25,6 +26,28 @@ namespace PokeGrading.Utilities
             }
 
             return sb.ToString();
+        }
+
+        public static bool VerifyPassword(
+            string plainPassword,
+            string storedPasswordHash)
+        {
+            if (string.IsNullOrWhiteSpace(plainPassword) ||
+                string.IsNullOrWhiteSpace(storedPasswordHash))
+            {
+                return false;
+            }
+
+            if (storedPasswordHash.StartsWith("$2a$") ||
+                storedPasswordHash.StartsWith("$2b$") ||
+                storedPasswordHash.StartsWith("$2y$"))
+            {
+                return BCryptNet.Verify(
+                    plainPassword,
+                    storedPasswordHash);
+            }
+
+            return HashPassword(plainPassword) == storedPasswordHash;
         }
     }
 }

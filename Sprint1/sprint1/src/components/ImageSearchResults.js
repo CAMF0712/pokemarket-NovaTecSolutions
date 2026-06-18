@@ -1,3 +1,5 @@
+import { buildApiUrl } from "../config/api";
+
 export default function ImageSearchResults({
     searchResult,
     uploadedImage,
@@ -56,8 +58,7 @@ export default function ImageSearchResults({
                                     >
                                         <img
                                             src={
-                                                "https://localhost:7271" +
-                                                item.card.image_url
+                                                buildApiUrl(item.card.image_url)
                                             }
                                             alt=""
                                             width={150}

@@ -17,6 +17,13 @@ function App() {
 
     const [user, setUser] = useState(null);
 
+    const resolvedUser =
+        user ||
+        JSON.parse(
+            localStorage.getItem("usuario_actual") ||
+            "null"
+        );
+
     useEffect(() => {
 
         const savedUser =
@@ -44,7 +51,7 @@ function App() {
                 <Route
                     path="/admin"
                     element={
-                        user?.role === "ADMIN"
+                        resolvedUser?.role === "ADMIN"
                             ? <AdminPg />
                             : <Navigate to="/login" />
                     }
@@ -53,7 +60,7 @@ function App() {
                 <Route
                     path="/catalog"
                     element={
-                        user?.role === "SUBMITTER"
+                        resolvedUser?.role === "SUBMITTER"
                             ? <ClientePg />
                             : <Navigate to="/login" />
                     }

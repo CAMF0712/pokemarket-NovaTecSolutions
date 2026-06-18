@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaRegUser } from "react-icons/fa";
 import { MdLockOutline } from "react-icons/md";
 import axios from "axios";
 import styles from './Login.module.css';
+import { buildApiUrl } from "../config/api";
 
 function Login({ setUser }) {
 
@@ -24,6 +25,29 @@ function Login({ setUser }) {
     const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+
+        const savedUser =
+            JSON.parse(
+                localStorage.getItem("usuario_actual") ||
+                "null"
+            );
+
+        if (!savedUser?.role) {
+            return;
+        }
+
+        if (savedUser.role === "ADMIN") {
+            navigate("/admin", { replace: true });
+            return;
+        }
+
+        if (savedUser.role === "SUBMITTER") {
+            navigate("/catalog", { replace: true });
+        }
+
+    }, [navigate]);
 
     const handleChange = (e) => {
 
@@ -52,7 +76,7 @@ function Login({ setUser }) {
 
             const response =
                 await axios.post(
-                    "https://localhost:7271/Login/login",
+                    buildApiUrl("/Login/login"),
                     {
                         email: form.email,
                         password: form.password
@@ -78,18 +102,17 @@ function Login({ setUser }) {
                 );
 
                 if (data.role === "ADMIN") {
-                    navigate("/admin");
+                    window.location.assign("/admin");
                 }
                 else if (data.role === "SUBMITTER") {
-                    navigate("/catalog");
+                    window.location.assign("/catalog");
                 }
                 else {
-                    navigate("/");
+                    window.location.assign("/");
                 }
             }
         }
         catch (error) {
-
             if (error.response?.data?.field) {
 
                 setFieldErrors({
@@ -131,7 +154,7 @@ function Login({ setUser }) {
 
             const response =
                 await axios.post(
-                    "https://localhost:7271/Register/register",
+                    buildApiUrl("/Register/register"),
                     payload
                 );
 
