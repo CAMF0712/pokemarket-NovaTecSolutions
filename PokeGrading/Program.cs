@@ -20,6 +20,8 @@ builder.Services.AddControllers();
 // Database
 builder.Services.AddScoped<SQL_connection>();
 builder.Services.AddScoped<DatabaseService>();
+builder.Services.AddScoped<ApiKeyValidationService>();
+builder.Services.AddScoped<CatalogCoverageService>();
 
 
 // CORS
