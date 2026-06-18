@@ -142,4 +142,16 @@ UNIQUE
     language,
     finish_type
 );
+
+ALTER TABLE API_USAGE
+ADD CONSTRAINT CK_API_USAGE_CONSUMED
+CHECK (cards_consumed >= 0);
+
+ALTER TABLE API_USAGE
+ADD CONSTRAINT CK_API_USAGE_MONTH
+CHECK
+(
+    month_year LIKE
+    '[0-9][0-9][0-9][0-9]-[0-9][0-9]'
+);
 GO

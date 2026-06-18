@@ -231,4 +231,46 @@ CREATE TABLE PRICE_ESTIMATES (
 
     source VARCHAR(255)
 );
+
+CREATE TABLE API_REQUESTS
+(
+    request_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+
+    api_key_id UNIQUEIDENTIFIER NOT NULL,
+
+    external_request_id VARCHAR(255) NOT NULL,
+
+    request_hash VARCHAR(255),
+
+    response_json VARCHAR(MAX),
+
+    created_at DATETIME2 NOT NULL
+);
+
+CREATE TABLE API_AUDIT_LOGS
+(
+    audit_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+
+    api_key_id UNIQUEIDENTIFIER NOT NULL,
+
+    request_id UNIQUEIDENTIFIER NOT NULL,
+
+    cards_count INT NOT NULL,
+
+    created_at DATETIME2 NOT NULL
+);
+
+CREATE TABLE API_USAGE
+(
+    usage_id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+
+    client_id UNIQUEIDENTIFIER NOT NULL,
+
+    month_year VARCHAR(7),
+
+    cards_consumed INT NOT NULL,
+
+    created_at DATETIME2 NOT NULL
+);
+
 GO
