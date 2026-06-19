@@ -81,22 +81,9 @@ namespace PokeGrading.Controllers
                 // Hash API Key
                 //-----------------------------------
 
-                string apiKeyHash;
-
-                using (MD5 md5 =
-                    MD5.Create())
-                {
-                    byte[] hash =
-                        md5.ComputeHash(
-                            Encoding.UTF8.GetBytes(
-                                input.api_key));
-
-                    apiKeyHash =
-                        BitConverter
-                        .ToString(hash)
-                        .Replace("-", "")
-                        .ToLower();
-                }
+                string apiKeyHash = 
+                    PasswordService.HashPassword(
+                       input.api_key);
 
                 //-----------------------------------
                 // Validate Key

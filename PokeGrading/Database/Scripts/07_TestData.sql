@@ -250,3 +250,28 @@ VALUES
     GETUTCDATE(),
     1
 );
+
+DECLARE @ClientId UNIQUEIDENTIFIER =
+(
+    SELECT TOP 1 client_id
+    FROM B2B_CLIENTS
+);
+
+INSERT INTO API_KEYS
+(
+    api_key_id,
+    client_id,
+    label,
+    api_key_hash,
+    status,
+    created_at
+)
+VALUES
+(
+    NEWID(),
+    @ClientId,
+    'Test Key',
+    '25001f3135f6ab613043e8d6812a53fe', --MiApiKey123
+    'ACTIVE',
+    GETUTCDATE()
+);
