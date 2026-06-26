@@ -2,6 +2,7 @@
 
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
+using PokeGrading.Services;
 using PokeGrading.Utilities;
 
 using System.Security.Cryptography;
@@ -23,18 +24,28 @@ namespace PokeGrading.Controllers
             CatalogCoverageService
             _catalogCoverageService;
 
+        private readonly
+            IAuditService
+            _auditService;
+
         public CatalogCoverageController(
             ApiKeyValidationService
                 apiKeyValidationService,
 
             CatalogCoverageService
-                catalogCoverageService)
+                catalogCoverageService,
+
+            IAuditService
+                auditService)
         {
             _apiKeyValidationService =
                 apiKeyValidationService;
 
             _catalogCoverageService =
                 catalogCoverageService;
+
+            _auditService =
+                auditService;
         }
 
         [HttpPost("coverage")]
@@ -254,14 +265,11 @@ namespace PokeGrading.Controllers
                 // Save Audit
                 //-----------------------------------
 
-                _catalogCoverageService
-                .SaveAudit(
+                _auditService
+                .LogApiCatalogCoverage(
                     apiKey.api_key_id,
-
                     response.request_id,
-
-                    input.cards.Count
-                );
+                    input.cards.Count);
 
                 //-----------------------------------
                 // Return

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
+using PokeGrading.Services;
 using PokeGrading.Utilities;
 using Dapper;
 
@@ -21,14 +22,14 @@ namespace PokeGrading.Controllers
             { ".jpg", ".jpeg", ".png" };
 
         private readonly DatabaseService _database;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IImageStorageService _imageStorageService;
 
         public GradingController(
             DatabaseService database,
-            IWebHostEnvironment environment)
+            IImageStorageService imageStorageService)
         {
             _database = database;
-            _environment = environment;
+            _imageStorageService = imageStorageService;
         }
 
         /// <summary>
@@ -143,51 +144,11 @@ namespace PokeGrading.Controllers
                 }
             }
 
-            //-----------------------------------
-            // Carpetas
-            //-----------------------------------
-
-            string gradingFolder =
-                Path.Combine(_environment.ContentRootPath, "GradingImages");
-
-            // Carpeta temporal: las imágenes se guardan aquí primero y
-            // se mueven a la carpeta definitiva solo si la transacción de DB es exitosa
-            string tempFolder =
-                Path.Combine(_environment.ContentRootPath, "GradingImages", "temp");
-
-            Directory.CreateDirectory(gradingFolder);
-            Directory.CreateDirectory(tempFolder);
-
-            //-----------------------------------
-            // Guardar imágenes en carpeta temporal
-            //-----------------------------------
-
-            string frontTempName =
-                $"{Guid.NewGuid()}_front{frontExt}";
-
-            string frontTempPath = Path.Combine(tempFolder, frontTempName);
-
-            using (var stream = new FileStream(frontTempPath, FileMode.Create))
-            {
-                await input.front_image.CopyToAsync(stream);
-            }
-
-            string? backTempName = null;
-            string? backTempPath = null;
-
-            if (input.back_image != null)
-            {
-                string backExt =
-                    Path.GetExtension(input.back_image.FileName).ToLowerInvariant();
-
-                backTempName = $"{Guid.NewGuid()}_back{backExt}";
-                backTempPath = Path.Combine(tempFolder, backTempName);
-
-                using (var stream = new FileStream(backTempPath, FileMode.Create))
-                {
-                    await input.back_image.CopyToAsync(stream);
-                }
-            }
+            var temporaryImages =
+                await _imageStorageService
+                    .SaveTemporaryGradingImagesAsync(
+                        input.front_image,
+                        input.back_image);
 
             //-----------------------------------
             // Vision Processing
@@ -236,8 +197,8 @@ namespace PokeGrading.Controllers
             Guid subgradeId = Guid.NewGuid();
 
             // Nombres definitivos de las imágenes (mismos que los temporales)
-            string frontFinalName = frontTempName;
-            string? backFinalName = backTempName;
+            string frontFinalName = temporaryImages.FrontImage.FileName;
+            string? backFinalName = temporaryImages.BackImage?.FileName;
 
             //-----------------------------------
             // Programación defensiva: todas las inserciones dentro de una transacción.
@@ -377,11 +338,9 @@ namespace PokeGrading.Controllers
             {
                 // Programación defensiva: si la transacción falló,
                 // limpiar los archivos temporales para no dejar huérfanos en disco
-                if (System.IO.File.Exists(frontTempPath))
-                    System.IO.File.Delete(frontTempPath);
-
-                if (backTempPath != null && System.IO.File.Exists(backTempPath))
-                    System.IO.File.Delete(backTempPath);
+                _imageStorageService.DeleteFilesIfExist(
+                    temporaryImages.FrontImage.FilePath,
+                    temporaryImages.BackImage?.FilePath);
 
                 return StatusCode(500, "An error occurred while saving the grading. Please try again.");
             }
@@ -390,16 +349,9 @@ namespace PokeGrading.Controllers
             // Transacción exitosa: mover archivos de temp a carpeta definitiva
             //-----------------------------------
 
-            System.IO.File.Move(
-                frontTempPath,
-                Path.Combine(gradingFolder, frontFinalName));
-
-            if (backTempPath != null && backFinalName != null)
-            {
-                System.IO.File.Move(
-                    backTempPath,
-                    Path.Combine(gradingFolder, backFinalName));
-            }
+            _imageStorageService.MoveGradingImagesToFinal(
+                temporaryImages.FrontImage,
+                temporaryImages.BackImage);
 
             //-----------------------------------
             // Response

@@ -26,6 +26,8 @@ builder.Services.AddScoped<ApiKeyValidationService>();
 builder.Services.AddScoped<CatalogCoverageService>();
 builder.Services.AddScoped<ICardRepository, CardRepository>();
 builder.Services.AddScoped<ICardValidationService, CardValidationService>();
+builder.Services.AddScoped<IImageStorageService, ImageStorageService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 
 // CORS

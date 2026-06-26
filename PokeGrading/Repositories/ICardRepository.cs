@@ -29,8 +29,6 @@ namespace PokeGrading.Repositories
 
         void InsertCardImages(Guid versionId, string frontImageUrl, string? backImageUrl);
 
-        void InsertAuditLog(Guid userId, string actionType, Guid entityId, string newValue);
-
         bool CardExists(Guid cardId);
     }
 }

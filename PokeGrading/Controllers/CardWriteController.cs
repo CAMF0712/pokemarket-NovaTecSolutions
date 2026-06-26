@@ -16,13 +16,19 @@ namespace PokeGrading.Controllers
 
         private readonly ICardRepository _cardRepository;
         private readonly ICardValidationService _cardValidationService;
+        private readonly IImageStorageService _imageStorageService;
+        private readonly IAuditService _auditService;
 
         public CardWriteController(
             ICardRepository cardRepository,
-            ICardValidationService cardValidationService)
+            ICardValidationService cardValidationService,
+            IImageStorageService imageStorageService,
+            IAuditService auditService)
         {
             _cardRepository = cardRepository;
             _cardValidationService = cardValidationService;
+            _imageStorageService = imageStorageService;
+            _auditService = auditService;
         }
 
         [HttpPost("create")]
@@ -50,37 +56,11 @@ namespace PokeGrading.Controllers
                 return BadRequest("Card already exists");
             }
 
-            string imagesFolder = Path.Combine(Directory.GetCurrentDirectory(), "Images");
-
-            if (!Directory.Exists(imagesFolder))
-            {
-                Directory.CreateDirectory(imagesFolder);
-            }
-
-            string frontFileName = $"{Guid.NewGuid()}" + Path.GetExtension(input.front_image.FileName);
-            string frontPath = Path.Combine(imagesFolder, frontFileName);
-
-            using (var stream = new FileStream(frontPath, FileMode.Create))
-            {
-                await input.front_image.CopyToAsync(stream);
-            }
-
-            string frontUrl = $"/images/{frontFileName}";
-
-            string? backUrl = null;
-
-            if (input.back_image != null)
-            {
-                string backFileName = $"{Guid.NewGuid()}" + Path.GetExtension(input.back_image.FileName);
-                string backPath = Path.Combine(imagesFolder, backFileName);
-
-                using (var stream = new FileStream(backPath, FileMode.Create))
-                {
-                    await input.back_image.CopyToAsync(stream);
-                }
-
-                backUrl = $"/images/{backFileName}";
-            }
+            var storedImages =
+                await _imageStorageService
+                    .SaveCardImagesAsync(
+                        input.front_image,
+                        input.back_image);
 
             Guid cardId = Guid.NewGuid();
             Guid versionId = Guid.NewGuid();
@@ -99,8 +79,12 @@ namespace PokeGrading.Controllers
             }
 
             _cardRepository.UpdateCurrentVersion(cardId, versionId);
-            _cardRepository.InsertCardImages(versionId, frontUrl, backUrl);
-            _cardRepository.InsertAuditLog(
+            _cardRepository.InsertCardImages(
+                versionId,
+                storedImages.FrontImageUrl,
+                storedImages.BackImageUrl);
+
+            _auditService.LogCardAction(
                 input.created_by,
                 "CREATE_CARD",
                 cardId,
@@ -127,7 +111,7 @@ namespace PokeGrading.Controllers
             _cardRepository.InsertCardVersion(versionId, input);
             _cardRepository.CopyImagesFromCurrentVersion(versionId, input.card_id);
             _cardRepository.UpdateCurrentVersion(input.card_id, versionId);
-            _cardRepository.InsertAuditLog(
+            _auditService.LogCardAction(
                 input.created_by,
                 "UPDATE_CARD",
                 input.card_id,

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using FuzzySharp;
+using PokeGrading.Services;
 using PokeGrading.Utilities;
 using Tesseract;
 
@@ -22,10 +23,14 @@ namespace PokeGrading.Controllers
         private const int ConfidenceRoundingDecimals = 2;
 
         private readonly DatabaseService _database;
+        private readonly IImageStorageService _imageStorageService;
 
-        public CardSearchController(DatabaseService database)
+        public CardSearchController(
+            DatabaseService database,
+            IImageStorageService imageStorageService)
         {
             _database = database;
+            _imageStorageService = imageStorageService;
         }
 
         /// <summary>
@@ -41,25 +46,17 @@ namespace PokeGrading.Controllers
                 return BadRequest("Image required");
             }
 
-            string tempFolder = Path.Combine(Directory.GetCurrentDirectory(), "Temp");
-
-            if (!Directory.Exists(tempFolder))
-            {
-                Directory.CreateDirectory(tempFolder);
-            }
-
             // El archivo temporal se limpia en el finally
             // para garantizar que se borre incluso si ocurre una excepción
-            string tempFile = Path.Combine(tempFolder, $"{Guid.NewGuid()}.jpg");
+            var temporaryImage =
+                await _imageStorageService
+                    .SaveTemporarySearchImageAsync(image);
+
+            string tempFile = temporaryImage.FilePath;
             string extractedText = "";
 
             try
             {
-                using (var stream = new FileStream(tempFile, FileMode.Create))
-                {
-                    await image.CopyToAsync(stream);
-                }
-
                 // Programación defensiva: si tessdata no existe o la imagen es inválida
                 // se captura la excepción y se retorna un error controlado
                 try
@@ -78,10 +75,7 @@ namespace PokeGrading.Controllers
             {
                 // Programación defensiva: garantiza limpieza del archivo temporal
                 // independientemente del flujo de ejecución
-                if (System.IO.File.Exists(tempFile))
-                {
-                    System.IO.File.Delete(tempFile);
-                }
+                _imageStorageService.DeleteFilesIfExist(tempFile);
             }
 
             extractedText = extractedText.Replace("\r", " ").Replace("\n", " ").Trim();
@@ -148,7 +142,7 @@ namespace PokeGrading.Controllers
             var candidates = _database.Query(
                 @"
                 SELECT
-                    c.card_id,
+                    c.card_id,i
                     cv.version_id,
                     cv.name AS card_name,
                     cv.card_number,
@@ -220,11 +214,6 @@ namespace PokeGrading.Controllers
                 .OrderByDescending(x => x.score)
                 .Take(MaximumCandidateMatches)
                 .ToList();
-
-            if (System.IO.File.Exists(tempFile))
-            {
-                System.IO.File.Delete(tempFile);
-            }
 
             if (results.Count == 0)
             {
