@@ -152,6 +152,48 @@ namespace PokeGrading.Repositories
                 });
         }
 
+
+        public Guid? GetCurrentVersionId(Guid cardId)
+        {
+            return _database.QuerySingleOrDefault<Guid?>(
+                @"
+                SELECT current_version_id
+                FROM CARDS
+                WHERE card_id = @card_id
+                ",
+                new()
+                {
+                    {"card_id", cardId}
+                });
+        }
+
+        public void UpdateCardVersion(Guid versionId, Data_input_create_card_version input)
+        {
+            _database.ExecuteNonQuery(
+                @"
+                UPDATE CARD_VERSIONS
+                SET
+                    name = @name,
+                    rarity = @rarity,
+                    pokemon_type = @pokemon_type,
+                    hp = @hp,
+                    illustrator = @illustrator,
+                    release_year = @release_year,
+                    created_by = @created_by
+                WHERE version_id = @version_id
+                ",
+                new()
+                {
+                    {"version_id", versionId},
+                    {"name", input.card_name},
+                    {"rarity", input.rarity},
+                    {"pokemon_type", input.pokemon_type},
+                    {"hp", input.hp},
+                    {"illustrator", input.illustrator},
+                    {"release_year", input.release_year},
+                    {"created_by", input.created_by}
+                });
+        }
         public void InsertCard(Guid cardId, Guid createdBy)
         {
             _database.ExecuteNonQuery(
@@ -424,3 +466,5 @@ namespace PokeGrading.Repositories
         }
     }
 }
+
+

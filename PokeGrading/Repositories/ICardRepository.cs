@@ -19,6 +19,10 @@ namespace PokeGrading.Repositories
             string language,
             string finishType);
 
+        Guid? GetCurrentVersionId(Guid cardId);
+
+        void UpdateCardVersion(Guid versionId, Data_input_create_card_version input);
+
         void InsertCard(Guid cardId, Guid createdBy);
 
         void InsertCardVersion(Guid versionId, Guid cardId, Data_input_add_card input);

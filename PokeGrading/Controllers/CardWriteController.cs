@@ -107,9 +107,53 @@ namespace PokeGrading.Controllers
                 return NotFound("Card not found");
             }
 
+            var existingCardId = _cardRepository.FindExistingCardVersionId(
+                input.set_name,
+                input.card_number,
+                input.edition,
+                input.language,
+                input.finish_type);
+
+            if (existingCardId != null && existingCardId != input.card_id)
+            {
+                return Conflict("Card version already exists");
+            }
+
+            if (existingCardId == input.card_id)
+            {
+                var currentVersionId = _cardRepository.GetCurrentVersionId(input.card_id);
+
+                if (currentVersionId == null)
+                {
+                    return NotFound("Card current version not found");
+                }
+
+                _cardRepository.UpdateCardVersion(currentVersionId.Value, input);
+
+                _auditService.LogCardAction(
+                    input.created_by,
+                    "UPDATE_CARD",
+                    input.card_id,
+                    input.card_name);
+
+                return Ok(new
+                {
+                    status = true,
+                    version_id = currentVersionId.Value
+                });
+            }
+
             Guid versionId = Guid.NewGuid();
 
-            _cardRepository.InsertCardVersion(versionId, input);
+            try
+            {
+                _cardRepository.InsertCardVersion(versionId, input);
+            }
+            catch (SqlException ex) when (ex.Number == SqlUniqueKeyViolationError)
+            {
+                return Conflict("Card version already exists");
+            }
+
             _cardRepository.CopyImagesFromCurrentVersion(versionId, input.card_id);
             _cardRepository.UpdateCurrentVersion(input.card_id, versionId);
             _auditService.LogCardAction(
@@ -126,4 +170,3 @@ namespace PokeGrading.Controllers
         }
     }
 }
-
