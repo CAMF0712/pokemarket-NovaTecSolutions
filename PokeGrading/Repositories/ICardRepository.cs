@@ -1,4 +1,4 @@
-using PokeGrading.Data_input_models;
+﻿using PokeGrading.Data_input_models;
 
 namespace PokeGrading.Repositories
 {
@@ -9,6 +9,8 @@ namespace PokeGrading.Repositories
         dynamic? GetCard(Guid cardId);
 
         IEnumerable<dynamic> GetVersions(Guid cardId);
+
+        IEnumerable<dynamic> GetActiveSearchCandidates();
 
         Guid? FindExistingCardVersionId(
             string setName,

@@ -1,4 +1,4 @@
-using PokeGrading.Data_input_models;
+﻿using PokeGrading.Data_input_models;
 using PokeGrading.Utilities;
 
 namespace PokeGrading.Repositories
@@ -91,6 +91,36 @@ namespace PokeGrading.Repositories
                 new()
                 {
                     {"card_id", cardId}
+                });
+        }
+
+        public IEnumerable<dynamic> GetActiveSearchCandidates()
+        {
+            return _database.Query(
+                @"
+                SELECT
+                    c.card_id,
+                    cv.version_id,
+                    cv.name AS card_name,
+                    cv.card_number,
+                    cv.hp,
+                    cv.pokemon_type,
+                    cv.set_name,
+                    cv.rarity,
+                    ci.image_url
+                FROM CARDS c
+                INNER JOIN CARD_VERSIONS cv
+                    ON c.current_version_id =
+                       cv.version_id
+                LEFT JOIN CARD_IMAGES ci
+                    ON cv.version_id =
+                       ci.version_id
+                   AND ci.image_type='FRONT'
+                WHERE c.active = @active
+                ",
+                new()
+                {
+                    { "active", ActiveCardFlag }
                 });
         }
 

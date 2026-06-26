@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Repositories;
 using PokeGrading.Services;
+using PokeGrading.Utilities;
 
 namespace PokeGrading.Controllers
 {
@@ -11,7 +12,6 @@ namespace PokeGrading.Controllers
     [Route("Card")]
     public class CardWriteController : ControllerBase
     {
-        // Código de error SQL Server para violación de unique key
         private const int SqlUniqueKeyViolationError = 2627;
 
         private readonly ICardRepository _cardRepository;
@@ -35,6 +35,8 @@ namespace PokeGrading.Controllers
         public async Task<ActionResult<Data_output_add_card>> CreateCard(
             [FromForm] Data_input_add_card input)
         {
+            this.EnsureTraceId();
+
             string? validationError =
                 _cardValidationService
                 .ValidateCreateCardInput(input);
@@ -66,9 +68,6 @@ namespace PokeGrading.Controllers
             Guid versionId = Guid.NewGuid();
             _cardRepository.InsertCard(cardId, input.created_by);
 
-            // Programación defensiva: captura violación de unique key para el caso
-            // de condición de carrera donde dos requests pasan el check de duplicado
-            // al mismo tiempo e intentan insertar la misma carta concurrentemente
             try
             {
                 _cardRepository.InsertCardVersion(versionId, cardId, input);
@@ -101,6 +100,8 @@ namespace PokeGrading.Controllers
         [HttpPost("version")]
         public IActionResult CreateVersion([FromBody] Data_input_create_card_version input)
         {
+            this.EnsureTraceId();
+
             if (!_cardRepository.CardExists(input.card_id))
             {
                 return NotFound("Card not found");
@@ -125,3 +126,4 @@ namespace PokeGrading.Controllers
         }
     }
 }
+
