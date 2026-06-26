@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+// Controlador HTTP: coordina el flujo de entrada/salida para LoginController.
+using Microsoft.AspNetCore.Mvc;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Models;
@@ -9,6 +10,9 @@ namespace PokeGrading.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de LoginController en esta capa.
+    /// </summary>
     public class LoginController : ControllerBase
     {
         private const int AdminRoleId = 3;
@@ -16,6 +20,9 @@ namespace PokeGrading.Controllers
 
         private readonly IUserRepository _userRepository;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de LoginController.
+        /// </summary>
         public LoginController(IUserRepository userRepository)
         {
             _userRepository = userRepository;
@@ -73,4 +80,5 @@ namespace PokeGrading.Controllers
         }
     }
 }
+
 

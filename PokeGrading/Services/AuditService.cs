@@ -1,16 +1,26 @@
+// Servicio: concentra logica de negocio y soporte para AuditService.
 using PokeGrading.Utilities;
 
 namespace PokeGrading.Services
 {
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de AuditService en esta capa.
+    /// </summary>
     public class AuditService : IAuditService
     {
         private readonly DatabaseService _database;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de AuditService.
+        /// </summary>
         public AuditService(DatabaseService database)
         {
             _database = database;
         }
 
+        /// <summary>
+        /// Registra en auditoria una accion ejecutada sobre cartas o versiones.
+        /// </summary>
         public void LogCardAction(
             Guid userId,
             string actionType,
@@ -50,6 +60,9 @@ namespace PokeGrading.Services
                 });
         }
 
+        /// <summary>
+        /// Registra en auditoria solicitudes de cobertura de catalogo via API.
+        /// </summary>
         public void LogApiCatalogCoverage(
             Guid apiKeyId,
             Guid requestId,

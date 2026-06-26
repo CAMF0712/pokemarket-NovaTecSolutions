@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+// Controlador HTTP: coordina el flujo de entrada/salida para RegisterController.
+using Microsoft.AspNetCore.Mvc;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Repositories;
@@ -9,6 +10,9 @@ namespace PokeGrading.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de RegisterController en esta capa.
+    /// </summary>
     public class RegisterController : ControllerBase
     {
         private const int DefaultUserRoleId = 1;
@@ -19,6 +23,9 @@ namespace PokeGrading.Controllers
 
         private readonly IUserRepository _userRepository;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de RegisterController.
+        /// </summary>
         public RegisterController(IUserRepository userRepository)
         {
             _userRepository = userRepository;
@@ -155,4 +162,5 @@ namespace PokeGrading.Controllers
         }
     }
 }
+
 

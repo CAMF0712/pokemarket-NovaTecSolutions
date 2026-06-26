@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+// Controlador HTTP: coordina el flujo de entrada/salida para CardSearchController.
+using Microsoft.AspNetCore.Mvc;
 using PokeGrading.Repositories;
 using PokeGrading.Services;
 using PokeGrading.Utilities;
@@ -7,6 +8,9 @@ namespace PokeGrading.Controllers
 {
     [ApiController]
     [Route("Card")]
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de CardSearchController en esta capa.
+    /// </summary>
     public class CardSearchController : ControllerBase
     {
         private readonly ICardRepository _cardRepository;
@@ -15,6 +19,9 @@ namespace PokeGrading.Controllers
         private readonly IOcrParsingService _ocrParsingService;
         private readonly ISearchScoringService _searchScoringService;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de CardSearchController.
+        /// </summary>
         public CardSearchController(
             ICardRepository cardRepository,
             IImageStorageService imageStorageService,
@@ -30,6 +37,9 @@ namespace PokeGrading.Controllers
         }
 
         [HttpPost("search-by-image")]
+        /// <summary>
+        /// Procesa una imagen, extrae texto por OCR y busca la mejor coincidencia en el catalogo.
+        /// </summary>
         public async Task<IActionResult> SearchByImage(IFormFile image)
         {
             this.EnsureTraceId();
@@ -101,4 +111,5 @@ namespace PokeGrading.Controllers
         }
     }
 }
+
 

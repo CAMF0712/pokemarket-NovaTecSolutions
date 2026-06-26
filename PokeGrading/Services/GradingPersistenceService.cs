@@ -1,19 +1,29 @@
+// Servicio: concentra logica de negocio y soporte para GradingPersistenceService.
 using Dapper;
 using PokeGrading.Utilities;
 
 namespace PokeGrading.Services
 {
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de GradingPersistenceService en esta capa.
+    /// </summary>
     public class GradingPersistenceService : IGradingPersistenceService
     {
         private const int ActiveAlgorithmFlag = 1;
 
         private readonly DatabaseService _database;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de GradingPersistenceService.
+        /// </summary>
         public GradingPersistenceService(DatabaseService database)
         {
             _database = database;
         }
 
+        /// <summary>
+        /// Persiste un grading completo y sus datos derivados en una transaccion.
+        /// </summary>
         public Guid SaveGrading(GradingPersistenceRequest request)
         {
             Guid versionId = _database.QuerySingle<Guid>(
@@ -161,3 +171,4 @@ namespace PokeGrading.Services
         }
     }
 }
+

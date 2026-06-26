@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+// Controlador HTTP: coordina el flujo de entrada/salida para CardWriteController.
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
@@ -10,6 +11,9 @@ namespace PokeGrading.Controllers
 {
     [ApiController]
     [Route("Card")]
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de CardWriteController en esta capa.
+    /// </summary>
     public class CardWriteController : ControllerBase
     {
         private const int SqlUniqueKeyViolationError = 2627;
@@ -19,6 +23,9 @@ namespace PokeGrading.Controllers
         private readonly IImageStorageService _imageStorageService;
         private readonly IAuditService _auditService;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de CardWriteController.
+        /// </summary>
         public CardWriteController(
             ICardRepository cardRepository,
             ICardValidationService cardValidationService,
@@ -32,6 +39,9 @@ namespace PokeGrading.Controllers
         }
 
         [HttpPost("create")]
+        /// <summary>
+        /// Crea una nueva carta con su version inicial e imagenes asociadas.
+        /// </summary>
         public async Task<ActionResult<Data_output_add_card>> CreateCard(
             [FromForm] Data_input_add_card input)
         {
@@ -98,6 +108,9 @@ namespace PokeGrading.Controllers
         }
 
         [HttpPost("version")]
+        /// <summary>
+        /// Crea o actualiza la version actual de una carta segun la identidad recibida.
+        /// </summary>
         public IActionResult CreateVersion([FromBody] Data_input_create_card_version input)
         {
             this.EnsureTraceId();
@@ -170,3 +183,4 @@ namespace PokeGrading.Controllers
         }
     }
 }
+

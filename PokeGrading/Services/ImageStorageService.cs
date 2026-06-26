@@ -1,16 +1,26 @@
+// Contrato de servicio: define capacidades de negocio para ImageStorageService.
 using Microsoft.AspNetCore.Http;
 
 namespace PokeGrading.Services
 {
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de ImageStorageService en esta capa.
+    /// </summary>
     public class ImageStorageService : IImageStorageService
     {
         private readonly IWebHostEnvironment _environment;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de ImageStorageService.
+        /// </summary>
         public ImageStorageService(IWebHostEnvironment environment)
         {
             _environment = environment;
         }
 
+        /// <summary>
+        /// Guarda imagenes definitivas de carta y devuelve sus rutas publicas.
+        /// </summary>
         public async Task<StoredCardImagesResult> SaveCardImagesAsync(
             IFormFile frontImage,
             IFormFile? backImage)
@@ -45,6 +55,9 @@ namespace PokeGrading.Services
             };
         }
 
+        /// <summary>
+        /// Guarda temporalmente una imagen para el flujo de busqueda OCR.
+        /// </summary>
         public async Task<TemporaryImageReference> SaveTemporarySearchImageAsync(IFormFile image)
         {
             string tempFolder = GetFolderPath("Temp");
@@ -69,6 +82,9 @@ namespace PokeGrading.Services
             };
         }
 
+        /// <summary>
+        /// Guarda temporalmente imagenes de grading para procesarlas despues.
+        /// </summary>
         public async Task<TemporaryGradingImagesResult> SaveTemporaryGradingImagesAsync(
             IFormFile frontImage,
             IFormFile? backImage)
@@ -110,6 +126,9 @@ namespace PokeGrading.Services
             };
         }
 
+        /// <summary>
+        /// Mueve imagenes temporales al almacenamiento final de grading.
+        /// </summary>
         public void MoveGradingImagesToFinal(
             TemporaryImageReference frontImage,
             TemporaryImageReference? backImage)
@@ -129,6 +148,9 @@ namespace PokeGrading.Services
             }
         }
 
+        /// <summary>
+        /// Elimina archivos solo cuando existen para evitar errores de IO.
+        /// </summary>
         public void DeleteFilesIfExist(params string?[] filePaths)
         {
             foreach (string? path in filePaths)

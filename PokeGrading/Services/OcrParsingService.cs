@@ -1,12 +1,22 @@
+// Servicio: concentra logica de negocio y soporte para OcrParsingService.
 using System.Text.RegularExpressions;
 
 namespace PokeGrading.Services
 {
+    /// <summary>
+    /// Contrato para transformar texto OCR en atributos estructurados.
+    /// </summary>
     public interface IOcrParsingService
     {
+        /// <summary>
+        /// Extrae atributos clave (HP, numero y tipo) desde el texto reconocido.
+        /// </summary>
         CardAttributesFromOcr ParseCardAttributes(string extractedText);
     }
 
+    /// <summary>
+    /// Implementa reglas de parseo para convertir texto OCR en datos de busqueda.
+    /// </summary>
     public class OcrParsingService : IOcrParsingService
     {
         private static readonly HashSet<string> ValidTypes =
@@ -25,6 +35,9 @@ namespace PokeGrading.Services
                 "Colorless"
             };
 
+        /// <summary>
+        /// Interpreta el texto OCR y extrae atributos estructurados de carta.
+        /// </summary>
         public CardAttributesFromOcr ParseCardAttributes(string extractedText)
         {
             var result = new CardAttributesFromOcr();
@@ -41,6 +54,7 @@ namespace PokeGrading.Services
             return result;
         }
 
+        // Busca patrones numericos que representan HP.
         private int? ExtractHp(string text)
         {
             var hpMatch = Regex.Match(
@@ -64,6 +78,7 @@ namespace PokeGrading.Services
             return null;
         }
 
+        // Detecta el numero de carta en formato x/y y devuelve x.
         private string? ExtractCardNumber(string text)
         {
             var numberMatch = Regex.Match(
@@ -78,6 +93,7 @@ namespace PokeGrading.Services
             return null;
         }
 
+        // Localiza el tipo Pokemon en base a un catalogo controlado de tipos validos.
         private string? ExtractType(string text)
         {
             foreach (var type in ValidTypes)
@@ -92,3 +108,4 @@ namespace PokeGrading.Services
         }
     }
 }
+

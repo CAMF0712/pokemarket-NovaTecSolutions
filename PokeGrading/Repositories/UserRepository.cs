@@ -1,17 +1,27 @@
+// Repositorio: encapsula acceso a datos para UserRepository.
 using PokeGrading.Models;
 using PokeGrading.Utilities;
 
 namespace PokeGrading.Repositories
 {
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de UserRepository en esta capa.
+    /// </summary>
     public class UserRepository : IUserRepository
     {
         private readonly DatabaseService _database;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de UserRepository.
+        /// </summary>
         public UserRepository(DatabaseService database)
         {
             _database = database;
         }
 
+        /// <summary>
+        /// Verifica la existencia de un usuario por su identificador.
+        /// </summary>
         public bool UserExists(Guid userId)
         {
             var user = _database.QuerySingleOrDefault<Guid?>(
@@ -28,6 +38,9 @@ namespace PokeGrading.Repositories
             return user != null;
         }
 
+        /// <summary>
+        /// Verifica si el correo ya esta registrado en el sistema.
+        /// </summary>
         public bool EmailExists(string email)
         {
             var user = _database.QuerySingleOrDefault<Guid?>(
@@ -44,6 +57,9 @@ namespace PokeGrading.Repositories
             return user != null;
         }
 
+        /// <summary>
+        /// Recupera un usuario por correo para autenticacion y validaciones.
+        /// </summary>
         public User? GetByEmail(string email)
         {
             return _database.QuerySingleOrDefault<User>(
@@ -69,6 +85,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Actualiza la fecha de ultimo acceso del usuario autenticado.
+        /// </summary>
         public void UpdateLastLogin(Guid userId)
         {
             _database.ExecuteNonQuery(
@@ -83,6 +102,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Crea un nuevo usuario persistiendo su informacion principal.
+        /// </summary>
         public void CreateUser(UserRegistrationRecord record)
         {
             _database.ExecuteNonQuery(
@@ -130,3 +152,4 @@ namespace PokeGrading.Repositories
         }
     }
 }
+

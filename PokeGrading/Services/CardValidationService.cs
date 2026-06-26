@@ -1,8 +1,12 @@
+// Servicio: concentra logica de negocio y soporte para CardValidationService.
 using PokeGrading.Data_input_models;
 using SixLabors.ImageSharp;
 
 namespace PokeGrading.Services
 {
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de CardValidationService en esta capa.
+    /// </summary>
     public class CardValidationService : ICardValidationService
     {
         private const int MinimumImageWidth = 600;
@@ -52,6 +56,9 @@ namespace PokeGrading.Services
                 "Portuguese"
             };
 
+        /// <summary>
+        /// Valida que los datos de alta de carta cumplan reglas minimas requeridas.
+        /// </summary>
         public string? ValidateCreateCardInput(Data_input_add_card input)
         {
             if (string.IsNullOrWhiteSpace(input.card_name))

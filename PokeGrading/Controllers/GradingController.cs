@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+// Controlador HTTP: coordina el flujo de entrada/salida para GradingController.
+using Microsoft.AspNetCore.Mvc;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Repositories;
@@ -9,6 +10,9 @@ namespace PokeGrading.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de GradingController en esta capa.
+    /// </summary>
     public class GradingController : ControllerBase
     {
         private const decimal ConfidenceThresholdForCompletedStatus = 85m;
@@ -23,6 +27,9 @@ namespace PokeGrading.Controllers
         private readonly IImageStorageService _imageStorageService;
         private readonly IGradingPersistenceService _gradingPersistenceService;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de GradingController.
+        /// </summary>
         public GradingController(
             ICardRepository cardRepository,
             IUserRepository userRepository,
@@ -174,4 +181,5 @@ namespace PokeGrading.Controllers
         }
     }
 }
+
 

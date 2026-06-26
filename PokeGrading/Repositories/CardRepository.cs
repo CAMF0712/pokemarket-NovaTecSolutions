@@ -1,19 +1,29 @@
-﻿using PokeGrading.Data_input_models;
+// Repositorio: encapsula acceso a datos para CardRepository.
+using PokeGrading.Data_input_models;
 using PokeGrading.Utilities;
 
 namespace PokeGrading.Repositories
 {
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de CardRepository en esta capa.
+    /// </summary>
     public class CardRepository : ICardRepository
     {
         private const int ActiveCardFlag = 1;
 
         private readonly DatabaseService _database;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de CardRepository.
+        /// </summary>
         public CardRepository(DatabaseService database)
         {
             _database = database;
         }
 
+        /// <summary>
+        /// Obtiene el catalogo activo de cartas para exponerlo en la API.
+        /// </summary>
         public IEnumerable<dynamic> GetCatalog()
         {
             return _database.Query(
@@ -60,6 +70,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Obtiene el detalle de una carta por su identificador unico.
+        /// </summary>
         public dynamic? GetCard(Guid cardId)
         {
             return _database.QuerySingleOrDefault<dynamic>(
@@ -79,6 +92,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Recupera el historial de versiones asociadas a una carta.
+        /// </summary>
         public IEnumerable<dynamic> GetVersions(Guid cardId)
         {
             return _database.Query(
@@ -94,6 +110,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Obtiene candidatos activos para el flujo de busqueda por imagen.
+        /// </summary>
         public IEnumerable<dynamic> GetActiveSearchCandidates()
         {
             return _database.Query(
@@ -124,6 +143,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Busca una version existente con la misma identidad funcional de carta.
+        /// </summary>
         public Guid? FindExistingCardVersionId(
             string setName,
             string cardNumber,
@@ -153,6 +175,9 @@ namespace PokeGrading.Repositories
         }
 
 
+        /// <summary>
+        /// Devuelve el identificador de la version actual registrada para una carta.
+        /// </summary>
         public Guid? GetCurrentVersionId(Guid cardId)
         {
             return _database.QuerySingleOrDefault<Guid?>(
@@ -167,6 +192,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Actualiza los campos editables de una version de carta existente.
+        /// </summary>
         public void UpdateCardVersion(Guid versionId, Data_input_create_card_version input)
         {
             _database.ExecuteNonQuery(
@@ -194,6 +222,9 @@ namespace PokeGrading.Repositories
                     {"created_by", input.created_by}
                 });
         }
+        /// <summary>
+        /// Inserta el registro base de la carta en la tabla principal.
+        /// </summary>
         public void InsertCard(Guid cardId, Guid createdBy)
         {
             _database.ExecuteNonQuery(
@@ -221,6 +252,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Inserta una nueva version de carta con sus atributos de negocio.
+        /// </summary>
         public void InsertCardVersion(
             Guid versionId,
             Guid cardId,
@@ -284,6 +318,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Inserta una nueva version de carta con sus atributos de negocio.
+        /// </summary>
         public void InsertCardVersion(
             Guid versionId,
             Data_input_create_card_version input)
@@ -346,6 +383,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Duplica referencias de imagen de la version actual hacia una nueva version.
+        /// </summary>
         public void CopyImagesFromCurrentVersion(Guid newVersionId, Guid cardId)
         {
             _database.ExecuteNonQuery(
@@ -377,6 +417,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Marca que una version especifica pasa a ser la version actual de la carta.
+        /// </summary>
         public void UpdateCurrentVersion(Guid cardId, Guid versionId)
         {
             _database.ExecuteNonQuery(
@@ -392,6 +435,9 @@ namespace PokeGrading.Repositories
                 });
         }
 
+        /// <summary>
+        /// Registra URLs de imagenes asociadas a una version de carta.
+        /// </summary>
         public void InsertCardImages(
             Guid versionId,
             string frontImageUrl,
@@ -449,6 +495,9 @@ namespace PokeGrading.Repositories
             }
         }
 
+        /// <summary>
+        /// Verifica si una carta existe en base de datos y se encuentra activa.
+        /// </summary>
         public bool CardExists(Guid cardId)
         {
             var existing = _database.QuerySingleOrDefault<Guid?>(
@@ -466,5 +515,6 @@ namespace PokeGrading.Repositories
         }
     }
 }
+
 
 

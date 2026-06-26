@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+// Controlador HTTP: coordina el flujo de entrada/salida para CatalogCoverageController.
+using Microsoft.AspNetCore.Mvc;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
 using PokeGrading.Services;
@@ -9,12 +10,18 @@ namespace PokeGrading.Controllers
 {
     [ApiController]
     [Route("api/b2b/catalog")]
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de CatalogCoverageController en esta capa.
+    /// </summary>
     public class CatalogCoverageController : ControllerBase
     {
         private readonly ApiKeyValidationService _apiKeyValidationService;
         private readonly CatalogCoverageService _catalogCoverageService;
         private readonly IAuditService _auditService;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de CatalogCoverageController.
+        /// </summary>
         public CatalogCoverageController(
             ApiKeyValidationService apiKeyValidationService,
             CatalogCoverageService catalogCoverageService,
@@ -155,4 +162,5 @@ namespace PokeGrading.Controllers
         }
     }
 }
+
 

@@ -1,7 +1,11 @@
+// Servicio: concentra logica de negocio y soporte para SearchScoringService.
 using FuzzySharp;
 
 namespace PokeGrading.Services
 {
+    /// <summary>
+    /// Contrato para puntuar candidatos y determinar la mejor coincidencia de busqueda.
+    /// </summary>
     public interface ISearchScoringService
     {
         SearchResult ScoreCandidates(
@@ -10,6 +14,9 @@ namespace PokeGrading.Services
             CardAttributesFromOcr attributes);
     }
 
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de SearchScoringService en esta capa.
+    /// </summary>
     public class SearchScoringService : ISearchScoringService
     {
         // Scoring parameters - centralized configuration
@@ -24,6 +31,9 @@ namespace PokeGrading.Services
         private const int FullConfidencePercentage = 100;
         private const int ConfidenceRoundingDecimals = 2;
 
+        /// <summary>
+        /// Calcula puntajes de similitud y selecciona la mejor coincidencia de busqueda.
+        /// </summary>
         public SearchResult ScoreCandidates(
             IEnumerable<dynamic> candidates,
             string extractedText,
@@ -139,3 +149,4 @@ namespace PokeGrading.Services
         }
     }
 }
+
