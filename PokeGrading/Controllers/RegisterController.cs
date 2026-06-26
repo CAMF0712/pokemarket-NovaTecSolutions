@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+// Controlador HTTP: coordina el flujo de entrada/salida para RegisterController.
+using Microsoft.AspNetCore.Mvc;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
+using PokeGrading.Repositories;
 using PokeGrading.Utilities;
 using System.Text.RegularExpressions;
 
@@ -8,6 +10,9 @@ namespace PokeGrading.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de RegisterController en esta capa.
+    /// </summary>
     public class RegisterController : ControllerBase
     {
         private const int DefaultUserRoleId = 1;
@@ -16,20 +21,21 @@ namespace PokeGrading.Controllers
         private const string PasswordPolicyPattern =
             @"^(?=.*[A-Z])(?=.*\d).{8,}$";
 
-        private readonly DatabaseService _database;
+        private readonly IUserRepository _userRepository;
 
-        public RegisterController(DatabaseService database)
+        /// <summary>
+        /// Inicializa una nueva instancia de RegisterController.
+        /// </summary>
+        public RegisterController(IUserRepository userRepository)
         {
-            _database = database;
+            _userRepository = userRepository;
         }
 
         [HttpPost("register")]
         public ActionResult<Data_response<Data_output_register_user>>
             Register([FromBody] Data_input_register_user input)
         {
-            //-----------------------------------
-            // Disclosure
-            //-----------------------------------
+            this.EnsureTraceId();
 
             if (!input.accept_disclosure)
             {
@@ -39,10 +45,6 @@ namespace PokeGrading.Controllers
                     message = "Disclosure must be accepted."
                 });
             }
-
-            //-----------------------------------
-            // Email format
-            //-----------------------------------
 
             if (!Regex.IsMatch(
                 input.email,
@@ -54,10 +56,6 @@ namespace PokeGrading.Controllers
                     message = "Invalid email format."
                 });
             }
-
-            //-----------------------------------
-            // Disposable domains
-            //-----------------------------------
 
             string[] blockedDomains =
             {
@@ -82,10 +80,6 @@ namespace PokeGrading.Controllers
                 });
             }
 
-            //-----------------------------------
-            // Password validation
-            //-----------------------------------
-
             if (!Regex.IsMatch(
                 input.password,
                 PasswordPolicyPattern))
@@ -96,10 +90,6 @@ namespace PokeGrading.Controllers
                     message = $"Password must contain at least one uppercase letter, one number and be at least {MinimumPasswordLength} characters long."
                 });
             }
-
-            //-----------------------------------
-            // Country validation
-            //-----------------------------------
 
             string[] validCountries =
             {
@@ -120,21 +110,7 @@ namespace PokeGrading.Controllers
                 });
             }
 
-            //-----------------------------------
-            // Unique email validation
-            //-----------------------------------
-
-            var existingUser =
-                _database.QuerySingleOrDefault<Guid?>(
-                    @"SELECT user_id
-                      FROM USERS
-                      WHERE LOWER(email) = LOWER(@email)",
-                    new Dictionary<string, object>
-                    {
-                        { "email", input.email }
-                    });
-
-            if (existingUser != null)
+            if (_userRepository.EmailExists(input.email))
             {
                 return BadRequest(new
                 {
@@ -142,10 +118,6 @@ namespace PokeGrading.Controllers
                     message = "Email already exists."
                 });
             }
-
-            //-----------------------------------
-            // Create user
-            //-----------------------------------
 
             Guid userId = Guid.NewGuid();
 
@@ -157,55 +129,20 @@ namespace PokeGrading.Controllers
                 input.preferred_language
                      .ToUpper();
 
-            string sql =
-            @"
-                INSERT INTO USERS
-                (
-                    user_id,
-                    role_id,
-                    email,
-                    alias,
-                    password_hash,
-                    country,
-                    preferred_language,
-                    status,
-                    active,
-                    created_at
-                )
-                VALUES
-                (
-                    @user_id,
-                    @role_id,
-                    @email,
-                    @alias,
-                    @password_hash,
-                    @country,
-                    @preferred_language,
-                    @status,
-                    @active,
-                    @created_at
-                )
-            ";
-
-            _database.ExecuteNonQuery(
-                sql,
-                new Dictionary<string, object>
+            _userRepository.CreateUser(
+                new UserRegistrationRecord
                 {
-                    { "user_id", userId },
-                    { "role_id", DefaultUserRoleId }, // USER
-                    { "email", input.email },
-                    { "alias", input.alias },
-                    { "password_hash", passwordHash },
-                    { "country", input.country },
-                    { "preferred_language", language },
-                    { "status", "ACTIVE" },
-                    { "active", true },
-                    { "created_at", DateTime.UtcNow }
+                    UserId = userId,
+                    RoleId = DefaultUserRoleId,
+                    Email = input.email,
+                    Alias = input.alias,
+                    PasswordHash = passwordHash,
+                    Country = input.country,
+                    PreferredLanguage = language,
+                    Status = "ACTIVE",
+                    Active = true,
+                    CreatedAt = DateTime.UtcNow
                 });
-
-            //-----------------------------------
-            // Response
-            //-----------------------------------
 
             return Ok(
                 new Data_response<Data_output_register_user>
@@ -216,20 +153,14 @@ namespace PokeGrading.Controllers
                         new Data_output_register_user
                         {
                             user_id = userId,
-
-                            email =
-                                input.email,
-
-                            alias =
-                                input.alias,
-
-                            role =
-                                "USER",
-
-                            created_at =
-                                DateTime.UtcNow
+                            email = input.email,
+                            alias = input.alias,
+                            role = "USER",
+                            created_at = DateTime.UtcNow
                         }
                 });
         }
     }
 }
+
+

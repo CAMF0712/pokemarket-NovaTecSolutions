@@ -279,54 +279,6 @@ namespace PokeGrading.Utilities
             });
         }
 
-        public void SaveAudit(
-            Guid apiKeyId,
-            Guid requestId,
-            int cardsCount)
-        {
-            _databaseService.ExecuteNonQuery(
-            @"
-            INSERT INTO API_AUDIT_LOGS
-            (
-                audit_id,
-                api_key_id,
-                request_id,
-                cards_count,
-                created_at
-            )
-            VALUES
-            (
-                @AuditId,
-                @ApiKeyId,
-                @RequestId,
-                @CardsCount,
-                GETUTCDATE()
-            )
-            ",
-            new Dictionary<string, object>
-            {
-                {
-                    "AuditId",
-                    Guid.NewGuid()
-                },
-
-                {
-                    "ApiKeyId",
-                    apiKeyId
-                },
-
-                {
-                    "RequestId",
-                    requestId
-                },
-
-                {
-                    "CardsCount",
-                    cardsCount
-                }
-            });
-        }
-
         public dynamic GetExistingRequest(
             Guid apiKeyId,
             string externalRequestId)

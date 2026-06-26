@@ -1,51 +1,40 @@
-﻿using Microsoft.AspNetCore.Mvc;
+// Controlador HTTP: coordina el flujo de entrada/salida para LoginController.
+using Microsoft.AspNetCore.Mvc;
 using PokeGrading.Data_input_models;
 using PokeGrading.Data_output_models;
-using PokeGrading.Utilities;
 using PokeGrading.Models;
+using PokeGrading.Repositories;
+using PokeGrading.Utilities;
 
 namespace PokeGrading.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    /// <summary>
+    /// Clase principal que concentra la responsabilidad de LoginController en esta capa.
+    /// </summary>
     public class LoginController : ControllerBase
     {
         private const int AdminRoleId = 3;
         private const int ModeratorRoleId = 2;
 
-        private readonly DatabaseService _databaseService;
+        private readonly IUserRepository _userRepository;
 
-        public LoginController(DatabaseService databaseService)
+        /// <summary>
+        /// Inicializa una nueva instancia de LoginController.
+        /// </summary>
+        public LoginController(IUserRepository userRepository)
         {
-            _databaseService = databaseService;
+            _userRepository = userRepository;
         }
 
         [HttpPost("login")]
         public ActionResult<Data_response<Data_output_login>>
         Login([FromBody] Data_input_login input)
         {
-            var user =
-                _databaseService.QuerySingleOrDefault<User>(
-                @"
-                SELECT
-                    user_id      AS UserId,
-                    role_id      AS RoleId,
-                    email        AS Email,
-                    alias        AS Alias,
-                    password_hash AS PasswordHash,
-                    country      AS Country,
-                    preferred_language AS PreferredLanguage,
-                    status       AS Status,
-                    active       AS Active,
-                    created_at   AS CreatedAt,
-                    last_login   AS LastLogin
-                FROM USERS
-                WHERE email = @Email
-                ",
-                new Dictionary<string, object>
-                {
-                    { "Email", input.email }
-                });
+            this.EnsureTraceId();
+
+            User? user = _userRepository.GetByEmail(input.email);
 
             if (user == null)
             {
@@ -65,24 +54,7 @@ namespace PokeGrading.Controllers
                 });
             }
 
-            //-----------------------------------
-            // Update Last Login
-            //-----------------------------------
-
-            _databaseService.ExecuteNonQuery(
-                @"
-                UPDATE USERS
-                SET last_login = GETUTCDATE()
-                WHERE user_id = @UserId
-                ",
-                new Dictionary<string, object>
-                {
-                    { "UserId", user.UserId }
-                });
-
-            //-----------------------------------
-            // Role Mapping
-            //-----------------------------------
+            _userRepository.UpdateLastLogin(user.UserId);
 
             string roleName =
                 user.RoleId switch
@@ -92,15 +64,10 @@ namespace PokeGrading.Controllers
                     _ => "SUBMITTER"
                 };
 
-            //-----------------------------------
-            // Response
-            //-----------------------------------
-
             return Ok(
                 new Data_response<Data_output_login>
                 {
                     status = true,
-
                     data =
                         new Data_output_login
                         {
@@ -113,3 +80,5 @@ namespace PokeGrading.Controllers
         }
     }
 }
+
+

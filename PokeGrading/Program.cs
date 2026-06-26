@@ -1,4 +1,6 @@
-using PokeGrading.Utilities;
+﻿using PokeGrading.Utilities;
+using PokeGrading.Repositories;
+using PokeGrading.Services;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +24,21 @@ builder.Services.AddScoped<SQL_connection>();
 builder.Services.AddScoped<DatabaseService>();
 builder.Services.AddScoped<ApiKeyValidationService>();
 builder.Services.AddScoped<CatalogCoverageService>();
+
+
+// Repositories
+builder.Services.AddScoped<ICardRepository, CardRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+
+// Services
+builder.Services.AddScoped<ICardValidationService, CardValidationService>();
+builder.Services.AddScoped<IImageStorageService, ImageStorageService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IOcrService, OcrService>();
+builder.Services.AddScoped<IOcrParsingService, OcrParsingService>();
+builder.Services.AddScoped<ISearchScoringService, SearchScoringService>();
+builder.Services.AddScoped<IGradingPersistenceService, GradingPersistenceService>();
 
 
 // CORS
