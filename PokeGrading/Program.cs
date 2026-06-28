@@ -2,6 +2,10 @@
 using PokeGrading.Repositories;
 using PokeGrading.Services;
 using Microsoft.Extensions.FileProviders;
+using PokeGrading.Services.Application;
+using PokeGrading.Services.ImagePreprocessing;
+using PokeGrading.Services.FeatureExtraction;
+using PokeGrading.Services.Grading;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +43,23 @@ builder.Services.AddScoped<IOcrService, OcrService>();
 builder.Services.AddScoped<IOcrParsingService, OcrParsingService>();
 builder.Services.AddScoped<ISearchScoringService, SearchScoringService>();
 builder.Services.AddScoped<IGradingPersistenceService, GradingPersistenceService>();
+
+// Grading
+builder.Services.AddScoped<
+    IGradingApplicationService,
+    GradingApplicationService>();
+
+builder.Services.AddScoped<
+    IImagePreprocessingService,
+    ImagePreprocessingService>();
+
+builder.Services.AddScoped<
+    IFeatureExtractionService,
+    FeatureExtractionService>();
+
+builder.Services.AddScoped<
+    IGradingEngine,
+    GradingEngine>();
 
 
 // CORS
@@ -96,9 +117,20 @@ var imagesPath =
         "Images"
     );
 
+var gradingImagesPath =
+    Path.Combine(
+        builder.Environment.ContentRootPath,
+        "GradingImages");
+
 if (!Directory.Exists(imagesPath))
 {
     Directory.CreateDirectory(imagesPath);
+}
+
+if (!Directory.Exists(gradingImagesPath))
+{
+    Directory.CreateDirectory(
+        gradingImagesPath);
 }
 
 
@@ -114,6 +146,16 @@ app.UseStaticFiles(
             ),
 
         RequestPath = "/images"
+    });
+
+app.UseStaticFiles(
+    new StaticFileOptions
+    {
+        FileProvider =
+            new PhysicalFileProvider(
+                gradingImagesPath),
+
+        RequestPath = "/grading-images"
     });
 
 

@@ -6,7 +6,12 @@ import axios
 
 import styles
     from "./SubmitGrading.module.css";
-import { buildApiUrl } from "../config/api";
+
+import { buildApiUrl }
+    from "../config/api";
+
+import GradingResult
+    from "./GradingResult";
 
 function SubmitGrading({selectedCard}) {
 
@@ -19,6 +24,10 @@ function SubmitGrading({selectedCard}) {
 
     const [loading, setLoading] =
         useState(false);
+
+    const [gradingResult,
+        setGradingResult] =
+        useState(null);
 
     const handleSubmit =
         async (e) => {
@@ -63,6 +72,8 @@ function SubmitGrading({selectedCard}) {
 
                 setLoading(true);
 
+                setGradingResult(null);
+
                 const formData =
                     new FormData();
 
@@ -104,11 +115,8 @@ function SubmitGrading({selectedCard}) {
                 const result =
                     response.data.data;
 
-                alert(
-                    `Grading enviado.\n\n` +
-                    `Grade: ${result.estimated_grade}\n` +
-                    `Confidence: ${result.confidence_score}%\n` +
-                    `Status: ${result.status}`
+                setGradingResult(
+                    result
                 );
 
                 setFrontImage(null);
@@ -257,6 +265,12 @@ function SubmitGrading({selectedCard}) {
                 </button>
 
             </form>
+
+            <GradingResult
+                result={
+                    gradingResult
+                }
+            />
 
         </div>
     );
