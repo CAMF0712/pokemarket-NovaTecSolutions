@@ -1,0 +1,377 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import ImageSearch
+    from "./ImageSearch";
+import { buildApiUrl } from "../config/api";
+
+function CardCatalog({
+    isAdmin = false,
+    onEdit = null,
+    onEvaluate = null
+}) {
+
+    const [cards,
+        setCards] = useState([]);
+
+    const [loading,
+        setLoading] = useState(true);
+
+    const [searchResult,
+        setSearchResult] = useState(null);
+
+    const [uploadedImage,
+        setUploadedImage] = useState(null);
+
+    useEffect(() => {
+
+        loadCatalog();
+
+    }, []);
+
+    const loadCatalog = async () => {
+
+        try {
+
+            const response =
+                await axios.get(
+                    buildApiUrl("/Card/catalog")
+                );
+
+            setCards(response.data);
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Error loading catalog"
+            );
+        }
+        finally {
+
+            setLoading(false);
+        }
+    };
+
+    const handleImageResults =
+        (file, result) => {
+            setUploadedImage(file);
+            setSearchResult(result);
+        };
+
+    const clearImageSearch =
+        () => {
+            setUploadedImage(null);
+            setSearchResult(null);
+        };
+
+    if (loading) {
+
+        return (
+            <h3>
+                Loading catalog...
+            </h3>
+        );
+    }
+
+    if (cards.length === 0) {
+
+        return (
+            <h3>
+                No cards found
+            </h3>
+        );
+    }
+
+    return (
+        <div>
+
+            <h2>
+                Card Catalog
+            </h2>
+
+            <ImageSearch
+                onResults={
+                    handleImageResults
+                }
+            />
+
+            {
+                searchResult &&
+                (
+                    <div
+                        style={{
+                            border: "2px solid #4caf50",
+                            borderRadius: "10px",
+                            padding: "20px",
+                            marginBottom: "20px",
+                            background: "#f8fff8"
+                        }}
+                    >
+
+                        <h3>
+                            Search Results
+                        </h3>
+
+                        <button
+                            onClick={
+                                clearImageSearch
+                            }
+                            style={{
+                                marginBottom:
+                                    "15px"
+                            }}
+                        >
+                            Clear Search
+                        </button>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "20px",
+                                alignItems:
+                                    "flex-start"
+                            }}
+                        >
+
+                            {
+                                uploadedImage &&
+                                (
+                                    <div>
+
+                                        <h4>
+                                            Uploaded Image
+                                        </h4>
+
+                                        <img
+                                            src={
+                                                URL.createObjectURL(
+                                                    uploadedImage
+                                                )
+                                            }
+                                            alt=""
+                                            width={220}
+                                        />
+
+                                    </div>
+                                )
+                            }
+
+                            <div>
+
+                                <h4>
+                                    Matches
+                                </h4>
+
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: "15px",
+                                        flexWrap:
+                                            "wrap"
+                                    }}
+                                >
+
+                                    {
+                                        searchResult
+                                            .candidate_matches
+                                            ?.map(
+                                                match => (
+
+                                                    <div
+                                                        key={
+                                                            match.card.card_id
+                                                        }
+                                                        style={{
+                                                            width:
+                                                                "180px"
+                                                        }}
+                                                    >
+
+                                                        <img
+                                                            src={
+                                                                buildApiUrl(match.card.image_url)
+                                                            }
+                                                            alt=""
+                                                            style={{
+                                                                width:
+                                                                    "100%"
+                                                            }}
+                                                        />
+
+                                                        <strong>
+                                                            {
+                                                                match.card.card_name
+                                                            }
+                                                        </strong>
+
+                                                        <br />
+
+                                                        Score:
+                                                        {" "}
+                                                        {
+                                                            match.score
+                                                        }
+
+                                                    </div>
+                                                )
+                                            )
+                                    }
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                )
+            }
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                        "repeat(auto-fill,minmax(280px,1fr))",
+                    gap: "20px"
+                }}
+            >
+
+                {
+                    cards.map(card => (
+
+                        <div
+                            key={card.card_id}
+                            style={{
+                                border:
+                                    "1px solid #ddd",
+                                borderRadius:
+                                    "10px",
+                                padding:
+                                    "15px",
+                                background:
+                                    "#fff"
+                            }}
+                        >
+
+                            {
+                                card.image_url &&
+                                (
+                                    <img
+                                        src={
+                                            buildApiUrl(card.image_url)
+                                        }
+                                        alt={
+                                            card.card_name
+                                        }
+                                        style={{
+                                            width:
+                                                "100%",
+                                            height:
+                                                "350px",
+                                            objectFit:
+                                                "contain",
+                                            marginBottom:
+                                                "10px"
+                                        }}
+                                    />
+                                )
+                            }
+
+                            <h3>
+                                {card.card_name}
+                            </h3>
+
+                            <p>
+                                <strong>
+                                    Set:
+                                </strong>
+                                {" "}
+                                {card.set_name}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Number:
+                                </strong>
+                                {" "}
+                                {card.card_number}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Rarity:
+                                </strong>
+                                {" "}
+                                {card.rarity}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Type:
+                                </strong>
+                                {" "}
+                                {card.pokemon_type}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    HP:
+                                </strong>
+                                {" "}
+                                {card.hp}
+                            </p>
+
+                            {
+                                !isAdmin &&
+                                onEvaluate &&
+                                (
+                                    <button
+                                        onClick={() =>
+                                            onEvaluate(card)
+                                        }
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px",
+                                            marginTop: "10px"
+                                        }}
+                                    >
+                                        Submit For Grading
+                                    </button>
+                                )
+                            }
+
+                            {
+                                isAdmin &&
+                                onEdit &&
+                                (
+                                    <button
+                                        onClick={() =>
+                                            onEdit(card)
+                                        }
+                                        style={{
+                                            width:
+                                                "100%",
+                                            padding:
+                                                "10px",
+                                            marginTop:
+                                                "10px"
+                                        }}
+                                    >
+                                        Edit Card
+                                    </button>
+                                )
+                            }
+
+                        </div>
+                    ))
+                }
+
+            </div>
+
+        </div>
+    );
+}
+
+export default CardCatalog;

@@ -1,0 +1,153 @@
+.container {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.slab {
+    width: 430px;
+    background: #ececec;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 18px 45px rgba(0,0,0,.35);
+}
+
+.label {
+    background: linear-gradient( 135deg, #0d47a1, #1976d2 );
+    color: white;
+    padding: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .label h3 {
+        margin: 0;
+        font-size: 26px;
+    }
+
+    .label span {
+        font-size: 18px;
+        opacity: .9;
+    }
+
+.gradeBadge {
+    width: 95px;
+    height: 95px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+    font-weight: bold;
+    box-shadow: 0 6px 15px rgba(0,0,0,.25);
+}
+
+.gradeGemMint {
+    color: #00b050;
+}
+
+.gradeMint {
+    color: #4caf50;
+}
+
+.gradeNearMint {
+    color: #ffb300;
+}
+
+.gradeExcellent {
+    color: #ff9800;
+}
+
+.gradeGood {
+    color: #e53935;
+}
+
+.imageContainer {
+    background: #dddddd;
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.cardImage {
+    width: 250px;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    transition: .25s;
+}
+
+    .cardImage:hover {
+        transform: scale(1.03);
+    }
+
+.infoSection {
+    background: white;
+    padding: 25px;
+    color: #222;
+}
+
+.status {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 22px;
+}
+
+.confidenceSection {
+    margin-bottom: 30px;
+}
+
+.confidenceHeader {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.progressBar {
+    height: 14px;
+    background: #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    transition: width .5s ease;
+}
+
+.high {
+    background: #00c853;
+}
+
+.medium {
+    background: #ffd600;
+}
+
+.low {
+    background: #f44336;
+}
+
+.metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.metricCard {
+    background: linear-gradient( 135deg, #2d2d2d, #454545 );
+    color: white;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: .25s;
+}
+
+    .metricCard:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0,0,0,.3);
+    }

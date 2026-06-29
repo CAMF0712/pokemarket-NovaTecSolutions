@@ -1,0 +1,480 @@
+﻿Work Item Type,Title,Description,Acceptance Criteria,Parent
+User Story,Registrar cuenta,Yo como Submitter quiero registrarme con mis datos para entonces poder usar PokéGrading y empezar a evaluar mis cartas.,"• Registro con: correo (único), alias, contraseña, país de residencia e idioma preferido (español por default; inglés alternativo).
+• Al crear la cuenta el sistema autogenera ID único, fecha de creación (timestamp UTC) y fecha de último login; rol Submitter asignado por default y cuenta activa de inmediato (sin correo de confirmación).
+• Antes de finalizar, el usuario acepta el disclosure: PokéGrading es informativo y no sustituye PSA, BGS ni CGC.
+• Validaciones: correo en formato válido y único en el sistema; contraseña con longitud mínima, al menos una mayúscula y un dígito; país perteneciente al listado de mercados atendidos (CR, PA, MX, CO, CL, AR como referencia inicial).
+• Mensajes de error específicos por campo: correo duplicado, formato inválido, contraseña fuera de reglas, país no soportado, disclosure no aceptado.
+Alternos:
+• Si alguna validación falla, no se crea la cuenta y se indica el motivo del campo afectado.
+• Si el dominio del correo está en lista bloqueada (correos descartables o dominios no autorizados), se rechaza el registro sin crear cuenta.",
+User Story,Iniciar sesión,Yo como Submitter quiero iniciar sesión con mi correo y contraseña para entonces acceder a mis evaluaciones e historial.,"• Login con correo y contraseña; al validar credenciales se crea sesión y se redirige al panel principal.
+Alternos:
+• Si el correo o la contraseña son incorrectos, se muestra un mensaje genérico que no revela cuál de los dos falló.
+• Si la cuenta está suspendida, se informa al usuario y se bloquea el acceso.",
+User Story,Restablecer contraseña,Yo como Submitter quiero restablecer mi contraseña cuando la olvide para entonces recuperar el acceso a mi cuenta.,"• El usuario solicita el restablecimiento ingresando su correo registrado; el sistema responde con mensaje genérico independientemente de si el correo existe.
+• Se envía un enlace de recuperación con token único, vigencia de 1 hora y un solo uso.
+• Al abrir el enlace el usuario ingresa la nueva contraseña dos veces (confirmación); aplica las mismas reglas de complejidad que el registro y no puede ser igual a la anterior.
+• Al restablecer exitosamente: todas las sesiones activas previas quedan invalidadas, se envía correo de confirmación del cambio y queda registrado en auditoría con timestamp e IP de origen.
+Alternos:
+• Si el correo no existe, se muestra el mismo mensaje genérico para no revelar qué correos están registrados (no se envía correo).
+• Si el enlace expiró o ya fue usado, se rechaza la operación y se ofrece solicitar uno nuevo.
+• Si la nueva contraseña no cumple las reglas o coincide con la anterior, se rechaza el cambio con motivo específico.
+• Más de 3 solicitudes para el mismo correo en 1 hora activan rate limiting y se informa al usuario.",
+User Story,Cerrar sesión,Yo como Submitter quiero cerrar sesión en cualquier momento para entonces proteger mi cuenta cuando termino de usar la plataforma.,"• El usuario puede cerrar sesión desde cualquier dispositivo donde esté autenticado.
+• Tras cerrar sesión, el acceso requiere autenticarse de nuevo y se redirige al inicio.
+Alternos:
+• Si falla la red durante el cierre, se advierte que la sesión podría no haberse cerrado y se ofrece reintentar.",
+User Story,Editar perfil,Yo como Submitter quiero editar mi perfil para entonces mantener mi información actualizada.,"• Campos editables: alias, contraseña, país e idioma preferido — los mismos campos del registro excepto correo y rol.
+• Las validaciones aplicadas son las mismas que en el registro (formato, reglas de contraseña, países soportados, idioma válido); cualquier cambio que las viole bloquea la actualización.
+• El cambio de contraseña requiere ingresar la actual y la nueva debe cumplir las mismas reglas que en registro y no coincidir con la anterior.
+• Al confirmar, los cambios se persisten y se muestra confirmación al usuario.
+• Cada cambio queda en auditoría inmutable por campo: autor, timestamp, valor anterior y valor nuevo.
+Alternos:
+• Si alguno de los campos no cumple las reglas de validación, no se aplican cambios y se indica el motivo del campo afectado.
+• Si la contraseña actual es incorrecta, se rechaza el cambio sin tocar los otros campos.
+• Ante un fallo del sistema al guardar, los cambios no se aplican parcialmente y se ofrece reintentar.",
+User Story,Crear cuenta Admin con doble verificación,Yo como SuperAdmin quiero crear y activar cuentas Admin con doble verificación para entonces controlar quién obtiene acceso administrativo al sistema.,"• Paso 1 — Creación: el SuperAdmin ingresa correo, alias y rol Admin; la cuenta queda en estado ‘pendiente de activación’ y queda registrado el solicitante con timestamp.
+• Paso 2 — Verificación: la cuenta se activa solo cuando se cumplen ambos eventos: (a) un segundo Admin o SuperAdmin aprueba la creación desde la consola administrativa, y (b) el nuevo Admin abre el enlace de activación enviado a su correo (un solo uso, vigencia 24 horas) y establece su contraseña inicial.
+• Una vez activada, la cuenta queda registrada con autor del paso 1, autor del paso 2, timestamps y método; recién en este momento puede iniciar sesión.
+Alternos:
+• Si el enlace de activación expira sin usarse, la cuenta pasa a estado ‘expirada’ y debe re-crearse.
+• Si el segundo verificador rechaza la creación, la cuenta no se activa y se notifica al solicitante con motivo.
+• Si el correo ya existe en el sistema en cualquier rol, no se permite la creación.
+• Mientras esté en ‘pendiente de activación’, la cuenta no puede iniciar sesión.",
+User Story,Crear cuenta Reviewer,Yo como Admin quiero crear y activar cuentas Reviewer para entonces tener operadores que puedan calibrar evaluaciones de baja confianza.,"• Paso 1 — Creación: el Admin ingresa correo, alias y rol Reviewer; la cuenta queda en estado ‘pendiente de activación’ con registro del Admin solicitante y timestamp.
+• Paso 2 — Activación: el Reviewer recibe correo con enlace de activación (un solo uso, vigencia 24 horas); al abrirlo establece su contraseña inicial y la cuenta queda activa.
+• A diferencia de Admin, no requiere segundo verificador.
+• Mientras esté en ‘pendiente de activación’, la cuenta no puede iniciar sesión.
+Alternos:
+• Si el enlace de activación expira sin usarse, la cuenta pasa a estado ‘expirada’ y debe re-crearse.
+• Si el correo ya existe en cualquier rol, no se permite la creación.
+• Si el Admin no tiene permisos para crear Reviewers, la operación es rechazada.",
+User Story,"Aprovisionar cuenta de servicio B2B con API key, cuota mensual y SLA",Yo como Admin quiero aprovisionar cuentas de servicio B2B vinculadas a un Customer B2B (tienda) y emitir API keys con cuota y SLA contractuales para entonces permitir que las tiendas integren PokéGrading en su flujo de atención al cliente.,"• Customer B2B (tienda): la cuenta B2B se vincula a un Customer B2B ya creado en el sistema con datos de la entidad legal, contacto comercial, contacto técnico y dirección de facturación. El Customer B2B es una entidad distinta del Submitter (consumidor B2C): un Submitter es la cuenta individual de una persona, mientras que un Customer B2B es una empresa con potencialmente múltiples cuentas de servicio.
+• Plan asignado: el Admin selecciona uno de los planes B2B disponibles (referencia inicial: Starter 100 evals/mes, Growth 500/mes, Pro 2000/mes, Enterprise > 5000/mes negociado caso a caso).
+• Cuota mensual: heredada del plan; el Admin puede ajustarla solo dentro de los límites permitidos por el plan.
+• SLA contractual: definido por plan (referencia: 99.0% Starter, 99.5% Growth, 99.9% Pro/Enterprise) con tiempos de respuesta diferenciados; aplica en métricas como p95 y disponibilidad.
+• API key: al aprovisionar se genera una API key única, se muestra una sola vez al Admin (one-time view) y nunca se persiste en plano legible; un Customer B2B puede tener múltiples API keys etiquetadas (ej: producción, staging).
+• Estados de la API key: activa, rotada (con periodo de gracia configurable para la versión anterior) y revocada.
+• Onboarding email: el contacto técnico del Customer B2B recibe correo con la API key (one-time view) e instrucciones de integración.
+• Registro: queda registrado el Customer B2B, plan, cuota inicial, SLA, fecha de provisión y Admin responsable.
+Alternos:
+• Si el Customer B2B no existe, debe crearse primero o el flujo ofrece crearlo en la misma operación.
+• Datos incompletos del Customer B2B o plan no seleccionado bloquean la provisión.
+• Si el Customer B2B ya tiene una API key activa con la misma etiqueta, se rechaza para evitar duplicados; el Admin puede usar otra etiqueta para crear una API key adicional.
+• Si la generación de la API key falla, no se persiste estado parcial y se ofrece reintentar.
+• Para Customers B2B Enterprise con SLA negociado, los valores se ingresan manualmente respetando los límites del contrato.",
+User Story,Suspender o reactivar cuenta con registro de auditoría,Yo como Admin quiero suspender o reactivar cuentas desde los listados administrativos para entonces controlar el acceso ante incumplimientos o resolución de incidencias.,"• La acción se ejecuta sobre una cuenta seleccionada desde uno de los listados administrativos: Submitters B2C (1.3.1), Customers B2B y sus cuentas de servicio (1.3.2) o Usuarios Internos (1.3.3); los listados permiten filtrar por estado para identificar cuentas activas o suspendidas antes de actuar.
+• Al seleccionar la cuenta, se muestra estado actual, historial de cambios de estado y se permite cambiar a ‘suspendida’ o ‘activa’ según corresponda.
+• La acción requiere motivo obligatorio y queda en auditoría inmutable con autor, timestamp, tipo de cuenta (Submitter B2C, Customer B2B, Admin o Reviewer), valor anterior y motivo.
+• Una cuenta suspendida no puede iniciar sesión ni consumir el API; las sesiones activas se invalidan al suspender.
+• Para Customers B2B: la suspensión revoca todas las API keys activas del Customer B2B; la reactivación restaura el acceso del Customer B2B pero NO regenera las API keys revocadas — deben re-aprovisionarse con nueva API key por seguridad.
+• Para Submitters B2C: la suspensión solo bloquea login y consumo del producto; al reactivar, el Submitter recupera acceso con sus credenciales originales.
+Alternos:
+• Si la cuenta ya está en el estado solicitado, la operación se ignora y se informa el estado actual.
+• Si el Admin no tiene permisos sobre el rol objetivo (ej: un Admin común no puede actuar sobre SuperAdmin), se rechaza con mensaje claro.
+• Si un Customer B2B fue suspendido automáticamente por agotamiento de cuota, la reactivación es posible pero las API keys revocadas siguen revocadas.",
+User Story,Listar y buscar Submitters con filtros operativos,Yo como Admin quiero listar y buscar Submitters (consumidores B2C) con filtros operativos para entonces gestionar usuarios individuales y atender solicitudes de soporte.,"• Lista paginada con alias, correo, país, plan, estado y último acceso.
+• Filtros por estado y plan; búsqueda por correo o alias parcial.
+Alternos:
+• Si el filtro no devuelve resultados, se muestra estado vacío con sugerencias para ajustar la búsqueda.
+• Si la consulta falla, se ofrece reintentar sin perder los filtros.",
+User Story,Listar cuentas de servicio B2B con cuota consumida y SLA,Yo como Admin quiero listar los Customers B2B (tiendas) con su consumo actual para entonces monitorear el cumplimiento contractual y detectar cuentas en riesgo.,"• Lista de Customers B2B con: tienda, plan asignado, consumo del mes (% de la cuota del plan), estado y último uso del API.
+• El plan determina la cuota mensual y el SLA contractual; en la lista se muestra solo el nombre del plan, no se exponen sus parámetros derivados.
+• Filtros por estado, plan y contacto comercial; búsqueda por nombre de tienda o contacto.
+• Indicadores visuales para cuentas con consumo > 80% o cercanas al fin del ciclo.
+• Las API keys nunca se exponen en este listado; solo se accede a la información de keys (etiquetas, estados) desde el detalle del Customer B2B con permisos específicos.
+Alternos:
+• Sin Customers B2B registrados o sin matches del filtro, se muestra estado vacío con CTA para crear o limpiar filtros.
+• Consumo en 0% para cuentas nuevas se muestra sin error.
+• Si la lista falla al cargar, se ofrece reintentar.",
+User Story,Listar usuarios internos Admin y Reviewer con auditoría de actividad,Yo como Admin quiero listar los usuarios internos Admin y Reviewer junto con su actividad reciente para entonces tener trazabilidad operativa del equipo.,"• Lista con alias, rol, estado y fecha de última acción; filtros por rol y estado.
+• Por usuario, resumen de últimas acciones administrativas o de revisión.
+Alternos:
+• Sin usuarios o sin matches del filtro, se muestra estado vacío.
+• Si un usuario no tiene actividad reciente, aparece como ‘sin actividad’.
+• Si la lista falla al cargar, se ofrece reintentar.",
+User Story,Agregar carta al catálogo,Yo como Admin quiero agregar una carta al catálogo de referencia para entonces que el sistema pueda identificarla y evaluarla cuando un usuario la suba.,"• El Admin ingresa los datos de identidad (requeridos): set, número en el set, edición (1st Edition, Unlimited, Shadowless, etc.), idioma y acabado (Holo, Reverse Holo, Full Art, Non-Holo, etc.).
+• Datos de display (recomendados): nombre, rareza (Common, Uncommon, Rare, Holo Rare, Ultra Rare, Secret Rare), tipo, HP, ilustrador y año de impresión.
+• El Admin sube imagen de referencia (frente; reverso opcional) en formato y tamaño permitidos.
+• Al guardar, el sistema autogenera un card_id interno único e inmutable, fecha de creación, autor y deja la carta activa en el catálogo.
+• Validaciones: identidad completa; rareza dentro del listado canónico; tipo dentro de los tipos válidos de Pokémon; HP numérico; idioma soportado; imagen con resolución mínima.
+• Cada alta queda en auditoría con autor, timestamp y datos ingresados.
+Alternos:
+• Datos requeridos incompletos o inválidos bloquean el alta y se indican los campos afectados.
+• Si ya existe una carta con la misma identidad (set + número + edición + idioma + acabado), se rechaza como duplicado.
+• Imagen que no cumple criterios mínimos de resolución o formato se rechaza.",
+User Story,Actualizar imagen o atributos de una carta con versionado,"Yo como Admin quiero actualizar la imagen, los atributos o el grado de control de una carta del catálogo preservando el histórico para entonces corregir información o agregar/ajustar ground truth sin perder trazabilidad de versiones.","• El Admin puede modificar atributos de identidad (set, número, edición, idioma, acabado), de display (nombre, rareza, tipo, HP, ilustrador, año) y de ground truth (grado PSA confirmado, número de certificado, fecha de certificación).
+• La imagen de referencia puede reemplazarse o complementarse (agregar reverso si solo había frente).
+• El card_id interno NO es editable y permanece estable en todas las versiones.
+• Cada cambio crea una nueva versión en el histórico de la carta sin sobrescribir la anterior; queda registrado autor, timestamp, campo modificado, valor anterior y valor nuevo.
+• Las evaluaciones existentes referencian la versión exacta que estaba activa al momento de evaluar (inmutabilidad referencial).
+• Validaciones idénticas a las del alta (incluyendo escala 1.0-10.0 para grado PSA y unicidad del certificado).
+Alternos:
+• Si los nuevos atributos generan duplicado de identidad con otra carta del catálogo, se rechaza la actualización.
+• Si el certificado PSA ingresado ya existe en otra carta, se rechaza por duplicado.
+• Imagen que no cumple criterios mínimos se rechaza y la versión anterior permanece activa.
+• Cualquier intento de modificar el card_id interno se bloquea con mensaje claro.
+• Cambios en ground truth (PSA grade) actualizan la suite de calibración en el siguiente release del algoritmo.",
+User Story,Inactivar o reactivar variante del catálogo (soft delete),Yo como Admin quiero inactivar o reactivar variantes del catálogo desde el listado de cartas para entonces retirar entradas obsoletas o erróneas preservando el histórico de evaluaciones.,"• La acción se ejecuta sobre una carta seleccionada desde la exploración del catálogo en modo Admin (2.4.1 con filtro que incluye cartas inactivas) o desde búsqueda directa por card_id, set+número o nombre.
+• El detalle muestra estado actual y historial de cambios de estado.
+• Inactivar y reactivar requieren motivo obligatorio y quedan en auditoría inmutable con autor, timestamp, valor anterior y motivo.
+• Una carta inactiva no aparece en búsquedas de identificación ni en el álbum público de Submitters; sí permanece visible para Admin con indicador de estado.
+• Las evaluaciones históricas asociadas a la carta inactivada siguen accesibles y consistentes con la versión que estaba activa cuando se evaluó.
+Alternos:
+• El borrado físico nunca se permite; solo cambio de estado.
+• Si la carta ya está en el estado solicitado, la operación se ignora y se informa el estado actual.
+• Si el Admin no encuentra la carta, debe activar el filtro de cartas inactivas en el listado.",
+User Story,Cargar archivo del set o expansión con validación batch y reporte de conflictos,Yo como Admin quiero cargar masivamente un set o expansión completa al catálogo para entonces incorporar muchas cartas de forma eficiente al lanzar nuevos sets de Pokémon.,"• Formato del archivo: ZIP que contiene un manifest.csv (UTF-8) y una carpeta /images con las imágenes de referencia.
+• Columnas del manifest.csv: set, número, edición, idioma, acabado, nombre, rareza, tipo, HP, ilustrador, año, image_filename (referencia al archivo dentro de /images).
+• Restricciones del archivo: máximo 5000 filas por manifest, máximo 200 MB de tamaño total, máximo 5 MB por imagen individual.
+• Restricciones de imagen: formato JPEG o PNG, resolución mínima requerida, una imagen por carta (frente).
+• Validación fila por fila contra las mismas reglas del alta individual (2.1.1); el reporte detalla filas válidas, con error (con motivo del campo afectado) y duplicados con catálogo existente.
+• Las cartas no se incorporan al catálogo hasta que el Admin confirme la importación (paso 2.2.2).
+• Cada carga genera un batch_id que queda en auditoría con: nombre del archivo, hash, total de filas, conteo por estado, autor, timestamps y resultado.
+Alternos:
+• Formato del archivo inválido (no es ZIP, no contiene manifest.csv, columnas faltantes) bloquea la carga con mensaje específico.
+• Si el archivo excede los límites de tamaño o filas, se rechaza con mensaje claro.
+• Si todas las filas tienen errores críticos, no se ofrece la opción de confirmar; el reporte queda como referencia.
+• Si una imagen referenciada en image_filename no existe en /images, esa fila se marca como error.
+• El archivo procesado se conserva en almacenamiento temporal por 30 días para reimportación o auditoría; luego se archiva o purga según política.",
+User Story,Confirmar importación tras revisar el reporte de validación,Yo como Admin quiero confirmar la importación tras revisar el reporte para entonces controlar qué cartas entran al catálogo permitiendo importación parcial cuando hay filas con error.,"• El Admin revisa el reporte y elige confirmar la importación parcial: solo las filas válidas se incorporan; las erróneas y duplicados quedan en el reporte para corrección manual.
+• Cada carta importada recibe card_id interno autogenerado, fecha de creación y queda asociada al batch_id de la importación.
+• Al confirmar, se actualiza el registro de auditoría del batch con conteo final de incorporadas y descartadas.
+Alternos:
+• Si el Admin cancela, ninguna carta del archivo se incorpora y el batch queda como ‘cancelado’ en auditoría.
+• Si durante la importación una carta válida ya fue agregada por otro Admin (ínterin), esa fila se omite y se informa en el reporte final.
+• Si la confirmación falla a mitad del proceso, las cartas ya importadas quedan en el catálogo y el batch queda en estado ‘parcialmente confirmado’ con detalle del corte.",
+User Story,"Notificar resumen de cartas importadas, rechazadas y duplicados resueltos",Yo como Admin quiero recibir el resumen tras una importación masiva para entonces tener visibilidad del resultado sin monitorear el proceso.,"• Al cerrar la importación, se notifica con conteos de importadas, rechazadas y duplicados resueltos, más enlace al reporte completo.
+• El resumen queda accesible en la auditoría del catálogo.
+Alternos:
+• Si la importación falla por completo, la notificación describe el motivo y enlaza al reporte de fallo.",
+User Story,"Auditar cambios del catálogo (quién, qué, cuándo, por qué)",Yo como Admin quiero auditar todos los cambios del catálogo para entonces tener trazabilidad operativa y de cumplimiento.,"• Toda acción (alta, actualización, inactivación, reactivación, importación masiva) genera entrada inmutable de auditoría con autor, fecha, tipo de cambio y motivo.
+• La auditoría es consultable con filtros por carta, autor, tipo y rango de fechas.
+Alternos:
+• Auditoría de una carta inexistente devuelve estado vacío.",
+User Story,Explorar álbum del catálogo,"Yo como Submitter o Admin quiero explorar el álbum del catálogo de PokéGrading para entonces entender qué cartas reconoce el sistema y, en el caso de Admin, gestionar el catálogo.","• Navegación por sets y expansiones con filtros por set, edición, idioma, acabado y rareza.
+• Búsqueda por nombre, número de carta o (para Admin) por card_id interno.
+• Resultados con miniatura, nombre, set y número; para Admin se incluye estado (activa/inactiva) y se ofrecen acciones contextuales (editar, inactivar/reactivar).
+• Filtro adicional para Admin: incluir cartas inactivas en los resultados.
+Alternos:
+• Sin resultados, estado vacío con sugerencias para ajustar la búsqueda.
+• Para Submitters, las cartas inactivas nunca aparecen; para Admin, aparecen solo si activa explícitamente el filtro.",
+User Story,Ver detalle de carta del catálogo con su metadata,"Yo como Submitter o Admin quiero ver el detalle de una carta del catálogo con toda su metadata e historial para entonces conocer sus atributos y, en el caso del Admin, auditar cómo evolucionó la entrada.","• El detalle muestra imagen de referencia y metadata completa: set, número, edición, idioma, acabado, rareza, tipo, HP, ilustrador, año y población conocida en grading profesional cuando exista.
+• Desde el detalle se puede iniciar una evaluación o agregar a watchlist.
+• Para Admin: sección adicional con historial de cambios de la carta (cada versión con autor, timestamp, campo modificado, valor anterior y valor nuevo) y estado actual (activa/inactiva).
+• Para Admin desde el detalle: acciones contextuales para editar, inactivar o reactivar.
+Alternos:
+• Si la carta fue inactivada mientras el Submitter la veía, las acciones se deshabilitan y se informa.
+• Para Submitter, las cartas inactivas no son accesibles desde el detalle público.",
+User Story,Capturar frente y reverso con overlay y feedback en vivo,Yo como Submitter quiero capturar el frente y el reverso de mi carta con guía visual en vivo para entonces obtener imágenes que el sistema pueda procesar correctamente.,"• Overlay con guía de posicionamiento y feedback en vivo de encuadre, iluminación y enfoque.
+• Formatos aceptados: JPEG y PNG (también HEIC en dispositivos iOS).
+• Tamaño por imagen: máximo 10 MB; resolución mínima 1024×1024 píxeles, máxima 4096×4096 píxeles.
+• Se requieren ambas tomas (frente y reverso) para enviar la carta; cada una se confirma cuando supera los criterios mínimos visuales.
+Alternos:
+• Si la toma no cumple los criterios, el sistema indica qué corregir (borroso, mal encuadre, iluminación insuficiente, resolución fuera de rango) y solicita repetir.
+• Si el archivo está fuera de los formatos o tamaños permitidos al subir desde galería en vez de cámara, se rechaza con mensaje específico.
+• El usuario puede repetir cuantas veces necesite o cancelar la captura.",
+User Story,"Enviar carta para evaluación (validación del archivo, Image Quality Score y almacenamiento aislado)",Yo como Submitter quiero enviar mi carta capturada para evaluación para entonces obtener un grado estimado y una recomendación.,"• Envío disponible una vez completadas ambas tomas (frente y reverso).
+• Validación del archivo: formato (JPEG/PNG/HEIC), tamaño (máx 10 MB) y detección de polyglot (archivos maliciosos disfrazados de imagen).
+• Image Quality Score sobre el umbral mínimo es requisito para aceptar el envío.
+• Tras aceptar, se confirma recepción al usuario y se genera identificador único de evaluación.
+• Las imágenes se almacenan según política de retención.
+Alternos:
+• Archivo corrupto, formato no soportado o tamaño excedido: rechazo con causa específica.
+• Polyglot detectado: rechazo con mensaje de seguridad y registro del intento en auditoría.
+• IQS bajo el umbral: rechazo indicando la causa (borroso, mal encuadre, iluminación) y opción de recapturar.
+• Sistema saturado: se acepta el envío y se informa el tiempo estimado.
+• Fallo de red en el envío: opción de reintentar sin perder la captura.",
+User Story,Realizar búsqueda rápida de carta,Yo como Submitter quiero que el sistema identifique automáticamente mi carta con una búsqueda rápida para entonces no tener que ingresar manualmente sus atributos.,"• Búsqueda rápida sobre el catálogo a partir de las imágenes capturadas.
+• Devuelve los 3 mejores candidatos con su nivel de confianza.
+• Si el candidato top supera el umbral configurado, se acepta automáticamente y avanza al siguiente paso.
+Alternos:
+• Sin candidatos sobre el umbral, escala a búsqueda especializada.
+• Si la imagen no permite identificación visual, deriva al flujo de búsqueda manual.",
+User Story,Realizar búsqueda especializada de carta,Yo como Submitter quiero que cuando la búsqueda rápida no resuelva el sistema realice una búsqueda más profunda para entonces aumentar la probabilidad de identificación automática.,"• Búsqueda especializada con algoritmo más profundo, ejecutada solo cuando la rápida no resuelve.
+• Devuelve top 3 candidatos con su confianza.
+• Si el top supera el umbral, se acepta automáticamente.
+Alternos:
+• Sin candidatos sobre el umbral, se solicita confirmación manual o se deriva a búsqueda manual.",
+User Story,Confirmar identidad de la carta,Yo como Submitter quiero confirmar la identidad propuesta o seleccionar la correcta del catálogo para entonces asegurar que la evaluación se hace sobre mi carta real.,"• El sistema presenta el candidato top con imagen, nombre, set, edición y acabado para confirmar.
+• La confirmación avanza al siguiente paso del flujo.
+• Si el usuario corrige seleccionando otra carta, la identidad corregida se usa y el desacuerdo se persiste para mejorar el algoritmo.
+Alternos:
+• Si ninguna opción coincide con la carta del usuario, se ofrece subir una nueva foto o pasar a búsqueda manual.",
+User Story,"Buscar carta por metadata (set, número, edición, idioma, acabado)",Yo como Submitter quiero buscar mi carta ingresando manualmente su metadata para entonces evitar el flujo de identificación visual cuando ya conozco la carta exacta.,"• Búsqueda combinando uno o varios criterios: set, número, edición, idioma, acabado y nombre.
+• Al menos un criterio debe ingresarse antes de ejecutar la búsqueda.
+• Resultados con miniatura para verificación visual, ordenados por relevancia respecto a los criterios.
+Alternos:
+• Sin matches: el sistema muestra estado vacío y ofrece tres caminos al usuario — (a) refinar o agregar criterios para reintentar, (b) cambiar al flujo de identificación visual capturando o subiendo nuevamente las imágenes, (c) reportar la carta como ‘no catalogada’ para que un Admin la incorpore (la solicitud queda pendiente y el usuario es notificado cuando esté disponible).
+• Cartas inactivas del catálogo no aparecen en los resultados.
+• Si los criterios son muy genéricos y los resultados exceden un máximo razonable, el sistema solicita refinar antes de mostrar la lista.",
+User Story,Seleccionar carta de los resultados y adjuntar imágenes,Yo como Submitter quiero seleccionar la carta correcta de los resultados de búsqueda manual para entonces asociarla a las imágenes que ya capturé y continuar con la evaluación.,"• El usuario selecciona una carta de los resultados de la búsqueda manual.
+• Si las imágenes ya fueron capturadas y validadas previamente en la sesión (porque la identificación automática falló o el usuario optó por path manual tras capturar), se asocian a la identidad seleccionada y la evaluación continúa.
+• Si el usuario llegó a la búsqueda manual sin imágenes capturadas en la sesión, el sistema lo redirige al flujo de captura para que las suba; al volver, la identidad seleccionada permanece asociada.
+• Tras la asociación se persiste el path de identificación como ‘manual’ para trazabilidad y mejora del algoritmo automático.
+Alternos:
+• Si el usuario cancela tras seleccionar, no se asocia identidad y puede volver a buscar; las imágenes capturadas se conservan en la sesión.
+• Si el usuario decide que la carta seleccionada es incorrecta tras asociar, puede deshacer la selección y elegir otra antes de iniciar la evaluación.",
+User Story,Ver listado de solicitudes de PokéGrading por Auto-Reporte Estructurado,Yo como Admin o Reviewer quiero ver el listado de evaluaciones cuyo path de identificación fue manual para entonces monitorear el uso del flujo manual (Admin) o priorizar revisión humana en casos donde la identidad fue declarada por el usuario (Reviewer).,"• Lista de evaluaciones cuyo path de identificación fue manual (auto-reporte estructurado).
+• Filtros por fecha, plan del usuario, estado de la evaluación, motivo de derivación al flujo manual y resultado.
+• Cada elemento navega al detalle de la evaluación.
+• Para Admin: foco en métricas operativas (volumen, tasa de éxito, comparación con flujo automático).
+• Para Reviewer: foco en cartas con identidad auto-reportada que pueden requerir verificación cruzada al revisar grado.
+Alternos:
+• Sin solicitudes en el rango filtrado, estado vacío.
+• Si la lista falla al cargar, se ofrece reintentar.",
+User Story,"Preprocesar carta (corrección de perspectiva, recorte, normalización y segmentación en ROIs)",Yo como sistema quiero preprocesar automáticamente las imágenes recibidas de la carta para entonces poder operar sobre datos consistentes y comparables en el cálculo posterior del grado.,"• Corrección de perspectiva, recorte al borde de la carta y normalización de color.
+• Segmentación en cuatro regiones: centering, corners, edges y surface.
+• Si el preprocesamiento es exitoso, el flujo avanza a extracción de features.
+Alternos:
+• Si no se puede aislar la carta del fondo, se deriva a calificación manual.
+• Si la imagen tiene distorsiones imposibles de corregir, se rechaza y se solicita recapturar.",
+User Story,Extraer features por ROI (métricas geométricas y de superficie),Yo como sistema quiero extraer automáticamente las métricas geométricas y de superficie por región de la carta preprocesada para entonces alimentar al motor de calificación con insumos cuantitativos consistentes.,"• Por cada ROI se calculan métricas geométricas (centering, alineación, simetría) y de superficie (rayones, manchas, defectos de impresión).
+• Las métricas se asocian a la evaluación para trazabilidad.
+Alternos:
+• Si una región tiene insumos insuficientes, se reporta como ‘datos incompletos’ y la evaluación se deriva a calificación manual.",
+User Story,Calificar carta,Yo como Submitter quiero recibir un grado estimado de mi carta basado en métricas objetivas para entonces saber si vale la pena enviarla a grading profesional.,"• Subgrade por dimensión (centering, corners, edges, surface) en escala 1.0–10.0.
+• Selección del baseline calibrado según (set, acabado) cuando hay ground truth suficiente; fallback al baseline global registrado en el output.
+• Regla de coherencia: el grado final no excede el subgrade más bajo + 0.5.
+• El resultado incluye la banda de incertidumbre asociada.
+• La evaluación se persiste con el identificador exacto de versión del algoritmo y queda inmutable: liberar una versión nueva no la modifica.
+• La operación es idempotente: reintentar el envío con la misma carta y sesión no genera evaluaciones duplicadas.
+Alternos:
+• Si algún subgrade no puede calcularse con insumos suficientes, la carta se deriva a calificación manual.
+• Si el resultado contradice umbrales mínimos de coherencia interna, se deriva a revisión humana.",
+User Story,Solicitar calificación manual ante imposibilidad o por solicitud del usuario,Yo como Submitter o como sistema quiero solicitar calificación manual cuando el motor automático no pueda procesar la carta o cuando un usuario Pro lo pida para entonces no perder cartas y atender necesidades especiales.,"• Encolado a la cola de calificación humana con motivo registrado: imposibilidad técnica del motor automático o solicitud explícita de un usuario Pro.
+• La carta queda en estado ‘en calificación manual’ y se notifica al usuario con SLA esperado.
+Alternos:
+• Cola saturada: se informa al usuario un SLA mayor al estándar.
+• Si el usuario no es Pro y solicita calificación manual sin disparador del sistema, se rechaza.",
+User Story,Mostrar estado del procesamiento al usuario con tiempo estimado,Yo como Submitter quiero ver el estado del procesamiento de mi carta con un tiempo estimado para entonces saber qué esperar y no quedarme bloqueado en una pantalla en blanco.,"• Tras enviar, se muestra el avance por etapas: identificando, validando, extrayendo, calificando, consultando precio.
+• Cada etapa muestra un tiempo estimado basado en la carga actual.
+• El usuario puede salir y volver y el estado sigue actualizado.
+Alternos:
+• Si el sistema está saturado y el tiempo supera el SLA estándar, se ofrece recibir el resultado por correo cuando esté listo.
+• Si una etapa falla, se muestra el motivo y los siguientes pasos (reintento o derivación a humano).",
+User Story,Notificar resultado de calificación al usuario por correo electrónico,Yo como Submitter quiero recibir el resultado de mi calificación por correo electrónico para entonces no estar pendiente de la plataforma mientras el sistema procesa.,"• Al finalizar la evaluación, el sistema envía un correo al Submitter con el resultado completo: identidad de la carta, grado estimado, banda de incertidumbre, nivel de confianza global y subgrades por dimensión.
+• El correo incluye también la recomendación accionable y el disclosure de no certificación obligatorio.
+• El correo enlaza al detalle del análisis en la aplicación, donde el usuario puede ver la explicación extendida (defectos detectados, versión del algoritmo, métricas extraídas).
+• Una sola notificación por evaluación; el contenido del correo es consistente con lo que el usuario verá en la aplicación.
+Alternos:
+• Si el envío falla por causa transitoria, el sistema reintenta automáticamente con backoff hasta agotar reintentos; el resultado queda igualmente accesible en la aplicación.
+• Si el correo del usuario fue marcado como permanently bounced o inválido, se notifica al Admin para revisión y el resultado queda solo en la plataforma con indicador visual.",
+User Story,Calcular nivel de confianza de calificación,Yo como sistema quiero calcular automáticamente un nivel de confianza global y por dimensión para cada calificación para entonces que el Submitter pueda interpretar el resultado y decidir si confiar en él.,"• Confianza calculada por subgrade (centering, corners, edges, surface) y global de la evaluación.
+• Presentación al usuario en escala comprensible (Alta / Media / Baja) acompañada del valor numérico.
+Alternos:
+• Si la confianza global cae bajo el umbral, la evaluación se deriva automáticamente a revisión humana.",
+User Story,Ver detalle del análisis de la carta,Yo como Submitter quiero ver en la aplicación el detalle completo del análisis de mi carta para entonces entender cómo se llegó al grado y poder defenderlo o justificar la decisión de envío profesional.,"• La vista en la aplicación es la fuente extendida del resultado: muestra todo lo que el correo incluye (identidad, grado final, banda de incertidumbre, nivel de confianza global, subgrades por dimensión, recomendación accionable y disclosure) más la información ampliada que no cabe en el correo.
+• Información ampliada: por cada subgrade se muestran los defectos detectados específicos (ejemplo: micro-whitening en esquina superior izquierda, nicking leve en borde inferior), métricas extraídas y razonamiento del scoring.
+• Visible: versión del algoritmo usada, fecha de evaluación y disclosure de no certificación.
+• El contenido en la aplicación se mantiene consistente con el del correo de notificación; el correo es un resumen, la aplicación es la fuente completa.
+Alternos:
+• Si la evaluación tuvo intervención humana (revisión o calificación manual), se indica el origen humano del resultado y el motivo de la derivación.
+• Si la vista detallada no puede renderizarse por un fallo, se muestra al menos el resultado básico (grado, confianza, recomendación) con mensaje accionable para reintentar.",
+User Story,Consultar precio,Yo como sistema quiero consultar automáticamente el precio de mercado de la carta calificada para entonces poder generar la recomendación económica al Submitter.,"• Tras calcular el grado, el sistema invoca a la API de PokéMarket usando identidad de la carta y grado estimado.
+• La API responde con un rango de precio probable (mínimo, esperado, máximo) que queda asociado a la evaluación.
+• La consulta se ejecuta con timeout configurado y reintento con backoff exponencial.
+Alternos:
+• Timeout o fallo de la API tras agotar reintentos: el flujo continúa en modo degradado (sin valor de mercado) y la carta se encola a tasación manual para que un evaluador humano asigne el precio.
+• La API responde pero no tiene datos para esa identidad y grado (carta no cubierta): también se encola a tasación manual.
+• Si la API cae a media operación, la evaluación queda con grado válido pero sin precio; se puede reprocesar la consulta cuando la API se recupere o derivar a tasación manual.",
+User Story,Solicitar tasación manual,Yo como sistema quiero solicitar tasación manual cuando la consulta automática de precio no se puede completar para entonces no dejar la evaluación sin valor de mercado.,"• Encolado a la lista de tasación manual cuando la consulta de precio falla o no devuelve datos.
+• Priorización por valor estimado del grado y antigüedad.
+• Notificación al usuario con SLA esperado de 48 horas.
+Alternos:
+• Cola saturada: SLA extendido informado al usuario.
+• Si la API se recupera antes que el operador tase la carta, el sistema completa la tasación automática y lo informa.",
+User Story,Tasar manualmente,Yo como Reviewer quiero tasar manualmente las cartas en cola para entonces resolver evaluaciones que el motor automático no pudo completar y cumplir el SLA con el usuario.,"• Lista priorizada con identidad, grado estimado y motivo de derivación por carta.
+• El Reviewer ingresa rango de precio referenciado y comentario; al guardar, se asocia a la evaluación y se notifica al usuario.
+Alternos:
+• Si el grado estimado parece incorrecto, el Reviewer puede derivar la carta a revisión humana del grado antes de tasarla.",
+User Story,Ver resultados de tasaciones,Yo como Admin quiero ver los resultados de tasaciones manuales para entonces auditar el desempeño del flujo humano y la calidad del trabajo del Reviewer.,"• Lista con identidad, grado, rango de precio asignado, Reviewer y tiempo de resolución.
+• Filtros por Reviewer, rango de fechas y SLA cumplido o incumplido.
+• Cada elemento navega al detalle completo de la evaluación.
+Alternos:
+• Sin tasaciones en el rango filtrado, estado vacío.",
+User Story,Crear recomendación post tasación,"Yo como Submitter quiero recibir una recomendación accionable que combine grado, valor de mercado y costo de envío profesional para entonces tomar una decisión económica informada sobre mi carta.","• Una vez disponibles grado y rango de precio, se genera una de cuatro recomendaciones: conservar, vender raw, enviar a grading profesional o derivar a revisión humana.
+• La recomendación incluye valor esperado del envío, costo de grading profesional considerado (PSA Regular como referencia base) y ganancia esperada respecto al raw.
+• Lleva su propio nivel de confianza y se presenta junto al detalle de la evaluación.
+Alternos:
+• Si grado o precio fueron humanos (manual), la recomendación lo indica explícitamente.
+• Si el costo de envío profesional excede el valor esperado, la recomendación es no enviar a grading.",
+User Story,Solicitar re-evaluación de una carta,Yo como Submitter quiero solicitar la re-evaluación de una de mis cartas con la versión actual del algoritmo para entonces aprovechar mejoras del modelo sin perder el resultado original.,"• El usuario pide re-evaluación de cualquier evaluación pasada cuyos datos se conserven.
+• La re-evaluación se persiste como evaluación nueva e independiente, vinculada a la original.
+• El historial muestra ambas versiones con su versión del algoritmo.
+Alternos:
+• Si la versión actual coincide con la original, se informa al usuario y se solicita confirmación.
+• Si las imágenes ya no están retenidas, no se puede re-evaluar y se notifica al usuario.",
+User Story,Solicitar replay masivo de evaluaciones,Yo como Submitter Pro quiero solicitar el replay masivo de varias de mis cartas con la última versión del algoritmo para entonces refrescar mi historial sin pedir re-evaluación carta por carta.,"• El Pro selecciona un conjunto de evaluaciones y dispara su replay.
+• Cada carta se procesa como re-evaluación independiente; al cerrar el lote, se notifica al usuario.
+• Cada nueva evaluación queda vinculada a la original y a la versión activa del algoritmo.
+Alternos:
+• Sin plan Pro, la opción no está disponible.
+• Lotes grandes se procesan por etapas con progreso parcial.
+• Cartas con imágenes ya purgadas se omiten y se reportan al usuario.",
+User Story,Ver historial de evaluaciones de una carta,Yo como Submitter quiero ver el historial de evaluaciones de una carta para entonces entender la evolución del resultado a lo largo de las versiones del algoritmo.,"• Línea de tiempo con todas las evaluaciones de la carta (originales y re-evaluaciones).
+• Cada entrada muestra fecha, grado, confianza y versión del algoritmo; navega al detalle completo.
+Alternos:
+• Sin evaluaciones aún, estado vacío con CTA para iniciar una.
+• Una sola evaluación se muestra como entrada única.
+• Las evaluaciones de origen humano se identifican explícitamente.
+• Si el historial falla al cargar, se ofrece reintentar.",
+User Story,Comparar evaluaciones de dos cartas distintas (Pro),Yo como Pro Collector quiero comparar las evaluaciones de dos cartas distintas lado a lado para entonces analizar consistencia del sistema o tomar decisiones de portfolio.,"• Selección de dos cartas del historial Pro y vista comparativa lado a lado.
+• Comparación de grado, banda de incertidumbre, nivel de confianza y subgrades por dimensión.
+• La vista resalta las diferencias más significativas.
+Alternos:
+• Sin plan Pro, la opción no está disponible.
+• Si una carta no tiene evaluación válida, la comparación se permite pero se informa la limitación.",
+User Story,Solicitar revisión humana automática,Yo como sistema quiero derivar automáticamente a revisión humana las evaluaciones cuya confianza esté bajo el umbral configurado para entonces no entregar al usuario un resultado poco confiable como definitivo.,"• Cuando la confianza global cae bajo el umbral, la evaluación se encola para revisión humana con motivo registrado.
+• La evaluación queda en estado ‘en revisión humana’ y el usuario recibe notificación con SLA esperado.
+Alternos:
+• Cola saturada: SLA extendido informado al usuario.
+• El resultado preliminar queda visible para el usuario marcado como ‘tentativo, en revisión’.",
+User Story,Ver solicitudes de revisión humana,Yo como Submitter quiero ver mis solicitudes en revisión humana con su estado y SLA para entonces saber cuánto debo esperar.,"• Lista de evaluaciones derivadas a revisión con estado, fecha de derivación y SLA esperado.
+• Cada elemento navega al detalle con el grado tentativo.
+Alternos:
+• Sin solicitudes en revisión, estado vacío.",
+User Story,Inspeccionar solicitud de revisión,Yo como Reviewer quiero inspeccionar la solicitud de revisión con todos sus inputs para entonces evaluar si el grado tentativo es correcto.,"• El Reviewer ve imagen original, subgrades calculados, métricas extraídas, grado tentativo, confianza y versión del algoritmo.
+• Las imágenes se pueden ampliar para análisis visual detallado y se muestra el historial previo de la carta cuando exista.
+Alternos:
+• Si las imágenes ya no están retenidas, la revisión se hace solo con métricas y se marca como tal.",
+User Story,Revisar manualmente,Yo como Reviewer quiero ajustar o confirmar el grado tentativo y emitir la evaluación revisada para entonces cerrar la solicitud y entregar al usuario un resultado calibrado.,"• El Reviewer confirma el grado tentativo o ajusta subgrades y grado final.
+• Comentario obligatorio cuando hay ajustes.
+• Al guardar, la evaluación queda como ‘revisada por humano’ con autor (anonimizado al usuario), versión del algoritmo y timestamp; se notifica al usuario.
+Alternos:
+• Si la carta no es procesable, se deriva a calificación humana desde cero.
+• Reasignación entre Reviewers ante sobrecarga o ausencia, sin perder trazabilidad.",
+User Story,Inspeccionar y reprocesar evaluación irrecuperable,Yo como Admin quiero inspeccionar el registro de evaluaciones irrecuperables y disparar reprocesamiento manual para entonces recuperar evaluaciones que el sistema no pudo completar tras varios intentos.,"• Lista de evaluaciones que entraron al registro tras 5 fallos consecutivos en cualquier etapa, con identificador, motivo del último fallo, etapa, intentos y fecha del último intento.
+• El Admin dispara reprocesamiento de una evaluación específica.
+• Al recuperarse, la evaluación sale del registro y continúa el flujo normal.
+• Cada acción del Admin queda en auditoría inmutable con motivo.
+Alternos:
+• Si el reprocesamiento vuelve a fallar, la evaluación regresa al registro con el contador incrementado y el nuevo motivo.
+• Si el motivo es disponibilidad de imágenes (ya purgadas), el Admin puede derivar a calificación humana en vez de reprocesar.
+• Sin evaluaciones en el registro, estado vacío.
+• Si la lista falla al cargar, se ofrece reintentar.",
+User Story,Calificar humanamente carta no procesable,Yo como Reviewer quiero calificar manualmente las cartas que el motor automático no pudo procesar para entonces no perder cartas y entregar un resultado al usuario.,"• Lista de cartas marcadas como ‘no procesables’ por imposibilidad técnica.
+• El Reviewer evalúa visualmente la carta y asigna grado, subgrades, confianza y comentario.
+• La evaluación queda con origen humano, autor (anonimizado al usuario), timestamp y motivo original de la imposibilidad; se notifica al usuario.
+Alternos:
+• Si las imágenes son insuficientes incluso para evaluación humana, se rechaza y se solicita al usuario recapturar.",
+User Story,Modificar Playbook,Yo como Admin quiero modificar el Playbook del algoritmo para entonces publicar versiones nuevas con mejoras documentadas.,"• Nueva versión con pesos, dataset de validación, métricas comparativas, motivos del cambio y fecha de liberación.
+• La versión queda en estado ‘borrador’ hasta pasar la suite de regresión y liberarse; identificador único e inmutable.
+• La versión activa anterior se conserva en histórico.
+Alternos:
+• Datos requeridos incompletos bloquean la creación.
+• Si la versión propuesta no pasa la regresión, no puede liberarse.",
+User Story,Consultar información del Playbook,"Yo como Admin quiero consultar la información del Playbook (versión activa, histórico y regresiones) para entonces auditar la evolución del algoritmo y defender decisiones.","• Versión activa con pesos, dataset, métricas y motivos.
+• Histórico completo de versiones liberadas y sus resultados de regresión.
+Alternos:
+• Si aún no hay versión liberada (solo borrador), estado informativo con esa indicación.
+• Sin permisos sobre el Playbook, lectura restringida.
+• Si la información falla al cargar, se ofrece reintentar.",
+User Story,Validar Playbook,Yo como sistema quiero ejecutar la suite de regresión sobre el dataset de calibración por cada cambio propuesto al Playbook para entonces no permitir liberar versiones que degraden la calidad.,"• Cada cambio dispara automáticamente la suite de regresión sobre el dataset de calibración.
+• Reporte con precisión por nivel de grado, distribución del error y métricas de calibración.
+• Si la regresión global supera el umbral de degradación configurado, el release queda bloqueado.
+• Dentro del umbral, la versión queda lista para liberar.
+Alternos:
+• Sin dataset disponible, la regresión no corre y el cambio queda bloqueado.
+• Si la suite falla por error técnico, se reporta el fallo y se permite reintentar.",
+User Story,Activar versión del Playbook a porcentaje de tráfico,Yo como Admin quiero activar una versión nueva del Playbook a un porcentaje de tráfico para entonces hacer rollout progresivo y validar comportamiento en producción sin romper el sistema.,"• El Admin asigna a una versión un porcentaje de tráfico (por ejemplo 10%); el restante continúa en la versión activa anterior.
+• El porcentaje se puede revertir en cualquier momento sin redespliegue.
+• Cada cambio queda registrado con autor y timestamp.
+Alternos:
+• Suma de porcentajes que excede 100% se rechaza.
+• Una versión que no pasó la regresión no puede recibir tráfico.",
+User Story,Configurar umbrales de derivación a revisión humana y de identificación,Yo como Admin quiero configurar los umbrales de derivación a revisión humana y de aceptación de identificación para entonces ajustar el balance entre tasa de revisión humana y calidad esperada.,"• Configuración del umbral global de confianza para derivación a revisión humana.
+• Configuración de los umbrales de aceptación para búsqueda rápida y especializada.
+• Cada cambio en auditoría inmutable con autor, timestamp, valor anterior, valor nuevo y motivo opcional.
+• Los cambios afectan evaluaciones nuevas y no retroactivamente las ya emitidas.
+Alternos:
+• Umbral fuera del rango configurado se rechaza.
+• Ante fallo del sistema al guardar, la configuración previa permanece vigente.",
+User Story,Configurar métricas de calibración del Playbook,Yo como Admin quiero configurar las métricas de calibración del Playbook (confidence vs precisión y drift en producción) para entonces detectar tempranamente degradación de calidad del algoritmo.,"• El Admin define qué métricas de calibración se monitorean.
+• Por métrica: umbral de alerta y destinatario de la alerta.
+• Cálculo periódico sobre evaluaciones reales comparando confianza reportada con precisión observada.
+• Cuando una métrica supera el umbral, se notifica al destinatario.
+Alternos:
+• Sin datos suficientes en el periodo, se reporta como ‘datos insuficientes’ sin disparar alerta.",
+User Story,Conectar tienda con API B2B,"Yo como Customer B2B (tienda) quiero conectar mis sistemas al API B2B usando mi API key, cuota y SLA contractual para entonces evaluar cartas de mis clientes en mostrador con el motor de PokéGrading.","• Autenticación con API key contra el endpoint de evaluación; la API key identifica al Customer B2B y a la cuenta de servicio etiquetada.
+• Validación de que la API key esté activa y de que el Customer B2B esté dentro de su cuota mensual.
+• Cada evaluación procesada consume cuota del Customer B2B y queda registrada con la API key que la originó.
+Alternos:
+• API key inválida, revocada o suspendida: rechazo con código de error claro.
+• Customer B2B con cuota mensual agotada: rechazo con la fecha de reinicio del ciclo.
+• SLA contractual del Customer B2B en riesgo por carga: el tráfico B2B se prioriza sobre el B2C de Submitters.",
+User Story,Ver resultados de evaluaciones B2B,Yo como Customer B2B (tienda) quiero consultar los resultados de las evaluaciones que envié al API B2B para entonces presentárselos a mis clientes en mostrador.,"• El Customer B2B consulta estado y resultado de cualquier evaluación que envió usando una API key suya.
+• Resultado: grado estimado, banda de incertidumbre, confianza, recomendación y disclosure.
+• Las evaluaciones permanecen accesibles vía API durante el periodo de retención contractual del Customer B2B.
+Alternos:
+• Sin evaluaciones aún o sin matches del filtro, estado vacío.
+• Evaluación en proceso: se devuelve estado y tiempo estimado.
+• API key consultando que no pertenece al mismo Customer B2B que originó la evaluación: rechazo por privacidad e aislamiento entre Customers.
+• Fallo temporal: código de error claro y reintento posible.",
+User Story,Notificar cuota mensual al alcanzar 80%,Yo como Customer B2B (tienda) quiero recibir una notificación cuando mi consumo mensual alcance el 80% de la cuota para entonces ajustar mi uso o renegociar plan antes de que se agote.,"• Monitoreo continuo del consumo agregado por Customer B2B (suma de todas sus API keys etiquetadas).
+• Al 80% del consumo mensual del Customer B2B, se notifica al contacto técnico y al contacto comercial una sola vez por ciclo.
+• El contador y la habilitación de la notificación se reinician al inicio del nuevo ciclo mensual.
+Alternos:
+• Si el consumo salta de menos del 80% directamente a más del 100% en un periodo corto, se envían consecutivas las notificaciones de 80% y de cuota agotada.",
+User Story,Solicitar borrado de mis imágenes y datos,Yo como Submitter quiero solicitar el borrado de mis imágenes y datos personales para entonces ejercer mi derecho legal de privacidad bajo la Ley 8968 de Costa Rica y la Ley 81 de 2019 de Panamá.,"• El usuario solicita el borrado desde su perfil y el sistema confirma la solicitud con timestamp y motivo opcional.
+• Las imágenes se borran dentro del SLA legal aplicable y los metadatos se anonimizan donde sea legal hacerlo.
+• Las evaluaciones se conservan anonimizadas para integridad estadística del modelo.
+• El usuario recibe confirmación al completarse el borrado.
+Alternos:
+• Si el borrado afecta evidencia requerida en una disputa legal activa, se informa la limitación y solo se procesa lo legalmente borrable.",
+User Story,Notificar al usuario sobre retención próxima,Yo como Submitter quiero recibir una alerta proactiva antes de que mis imágenes sean borradas por política de retención para entonces decidir si exportarlas o extender el periodo.,"• Antes de cumplirse el periodo de retención, el usuario recibe una alerta con qué imágenes se borrarán y cuándo.
+• La alerta incluye opciones para exportar el historial o solicitar extensión del periodo (sujeto al plan).
+• Una sola alerta por lote de imágenes próximas a vencer.
+Alternos:
+• Sin respuesta del usuario, las imágenes se borran al cumplir el periodo y se notifica el resultado.
+• Plan que no permite extensión: se informa la limitación.",
+User Story,Exportar historial de evaluaciones en JSON con verificación de integridad,Yo como Submitter quiero exportar mi historial completo de evaluaciones en JSON con verificación de integridad para entonces tener una copia portable y auditable de mi información.,"• Exportación desde el perfil con todas las evaluaciones: grado, confianza, versión del algoritmo y referencias a imágenes.
+• El archivo incluye un mecanismo de verificación de integridad que permite confirmar que no fue alterado.
+• Entrega por descarga directa o correo según preferencia.
+Alternos:
+• Historial muy grande: se procesa en background y se notifica al usuario al estar listo.
+• Historial parcialmente borrado por solicitud previa: se exporta lo restante con nota explicativa.",
+User Story,Exportar evaluación para uso legal o disputa,Yo como Admin quiero exportar evaluaciones puntuales de cualquier usuario para uso legal o disputa para entonces responder a requerimientos legales o investigaciones internas con evidencia auditable.,"• Exportación de una evaluación por identificador o por usuario asociado.
+• El export incluye identidad de la carta, grado, subgrades, confianza, versión del algoritmo, autor (cuando hubo revisión humana), timestamps y referencias a imágenes.
+• Mecanismo de verificación de integridad y sello de tiempo incluidos.
+• Motivo legal obligatorio (referencia a expediente, requerimiento o disputa).
+• Cada exportación queda en auditoría inmutable con autor (Admin), motivo, identificador y timestamp.
+Alternos:
+• Si la evaluación está bajo solicitud de borrado activa, se informa al Admin y se registra la decisión.
+• Evaluación inexistente o purgada por retención legal: rechazo con sugerencia de pasos alternativos.
+• Sin permisos para exportar evaluaciones de otros usuarios: rechazo.
+• Fallo del sistema durante la exportación: sin auditoría parcial; se ofrece reintentar.",
+User Story,Generar reporte de cumplimiento del milestone con el inversor,Yo como Admin quiero generar el reporte de cumplimiento del milestone para entonces presentar al inversor evidencia auditable del avance del proyecto contra los compromisos contractuales.,"• Reporte con: total de evaluaciones por usuarios externos (no founders) en el periodo, NPS de usuarios Beta, versiones liberadas del Algorithm Playbook con sus métricas, evidencia de calibración y cumplimiento de SLAs.
+• Rango de fechas configurable, con preset al milestone contractual (al 31 de diciembre de 2026: 200 evaluaciones externas y NPS ≥ 40).
+• Sello de generación con autor, timestamp y mecanismo de verificación de integridad; queda en histórico de reportes.
+• Cada generación en auditoría inmutable.
+Alternos:
+• Sin datos suficientes para alguna métrica: se indica explícitamente y se ofrece reporte parcial.
+• Milestone marcado manualmente como cumplido o incumplido: se refleja con autor y motivo de la decisión.
+• Fallo del sistema en la generación: reintento posible sin duplicar el sello de tiempo.",
+User Story,Mostrar página 'Cómo funciona PokéGrading' con disclosure obligatorio,Yo como visitante o usuario quiero ver una página pública que explique cómo funciona PokéGrading con el disclosure obligatorio para entonces tener transparencia algorítmica antes de usar el servicio.,"• Descripción accesible de qué hace el algoritmo, qué inputs usa, qué outputs produce, sus limitaciones y cómo se calibra.
+• Disclosure visible: PokéGrading es estimación informativa; no sustituye PSA, BGS ni CGC.
+• Enlace al Algorithm Playbook técnico para detalle.
+• La descripción se mantiene alineada con la versión activa del Playbook.
+Alternos:
+• Cuando hay versión nueva del Playbook, la página se actualiza automáticamente o se marca como ‘pendiente de actualización’.",
+User Story,Evaluar carta en Discovery,Yo como sistema quiero delegar la identificación de una carta al modelo Discovery cuando se cumplen los criterios de adopción para entonces aprovechar mejor precisión sin comprometer costo ni latencia.,"• Cuando los criterios de adopción están activos, la identificación se delega a Discovery en el paso que correspondería ejecutar la búsqueda especializada.
+• Discovery devuelve los candidatos top con su confianza.
+• Si el candidato top supera el umbral configurado, se acepta automáticamente.
+Alternos:
+• Baja confianza o sin match: se solicita detección manual al usuario.
+• Criterios de adopción desactivados (costo, precisión o latencia fuera de rango): el sistema vuelve a la búsqueda especializada clásica.",
+User Story,Solicitar detección manual por fallo en Discovery,Yo como sistema quiero solicitar detección manual al usuario cuando Discovery falle o no resuelva con suficiente confianza para entonces no perder la evaluación.,"• Ante baja confianza o falla de Discovery, el flujo se redirige a búsqueda manual.
+• Cuando Discovery devolvió candidatos, se ofrecen al usuario como punto de partida.
+• El usuario selecciona del catálogo o sube nueva foto.
+Alternos:
+• Pérdida total de conexión con Discovery: el flujo cae a búsqueda especializada clásica como respaldo.",
+User Story,Ver reporte de evaluaciones de Discovery,Yo como Admin quiero ver un reporte de las evaluaciones procesadas por Discovery para entonces tener visibilidad operativa sobre el uso del modelo y su contribución.,"• Reporte con cantidad de evaluaciones procesadas por Discovery, tasa de éxito, latencia promedio y costo unitario.
+• Filtros por rango de fechas; resaltado de desviaciones respecto a SLAs configurados.
+Alternos:
+• Sin actividad de Discovery en el rango filtrado, estado vacío.",
+User Story,"Comparar rendimiento entre Discovery, búsqueda rápida y búsqueda especializada",Yo como Admin quiero comparar el rendimiento de Discovery contra la búsqueda rápida y la especializada para entonces decidir si Discovery debe quedar como path principal de identificación.,"• Comparativa de precisión, latencia y costo unitario sobre el mismo conjunto de evaluaciones (dataset de calibración + muestra real del Beta).
+• Indicación clara de si los criterios de adopción del caso se cumplen: precisión superior en al menos 5 puntos porcentuales, p95 ≤ 5 segundos y costo unitario aceptable.
+• El Admin aprueba o rechaza la promoción de Discovery a path principal con base en el reporte.
+Alternos:
+• Datos insuficientes para comparación estadística: se indica y no se permite la promoción.",

@@ -1,0 +1,118 @@
+.adminContainer {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #f5f5f5;
+    border: 1px solid #dcdcdc;
+    border-radius: 10px;
+
+    backdrop-filter: blur(20px);
+    color: black;
+}
+
+.title {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 25px;
+}
+
+.input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #cfcfcf;
+    background: white;
+
+    color: black;
+}
+
+.input::placeholder {
+    color: rgba(0,0,0,255);
+}
+
+.select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #cfcfcf;
+    background: white;
+
+    color: black;
+}
+
+.select option {
+    color: black;
+}
+
+.divider {
+    margin: 25px 0;
+}
+
+.fileSection {
+    margin-bottom: 15px;
+}
+
+.fileLabel {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.cancelButton {
+    margin-left: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+
+.logoutButton {
+
+    padding: 10px 18px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #dc3545;
+    color: white;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.logoutButton:hover {
+    background: #bb2d3b;
+}
+
+.actions {
+    margin-top: 20px;
+}
+
+.catalogSection {
+    margin-top: 30px;
+}
