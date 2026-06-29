@@ -1,42 +1,29 @@
 ﻿using Microsoft.AspNetCore.Http;
-using OpenCvSharp;
+using SixLabors.ImageSharp;
 
 namespace PokeGrading.Utilities
 {
     public static class ImageValidationService
     {
-        private const int MinWidth = 1024;
-        private const int MinHeight = 1024;
+        private const int MinSupportedImageWidth = 600;
+        private const int MinSupportedImageHeight = 600;
 
-        private const int MaxWidth = 4096;
-        private const int MaxHeight = 4096;
-
-        public static bool IsValidImage(IFormFile file)
+        public static bool IsValidImage(
+            IFormFile file)
         {
             if (file == null)
                 return false;
 
             try
             {
-                using MemoryStream stream = new();
-
-                file.CopyTo(stream);
-
-                byte[] bytes = stream.ToArray();
-
-                Mat image =
-                    Cv2.ImDecode(
-                        bytes,
-                        ImreadModes.Color);
-
-                if (image.Empty())
-                    return false;
+                using var image =
+                    Image.Load(
+                        file.OpenReadStream());
 
                 return
-                    image.Width >= MinWidth &&
-                    image.Height >= MinHeight &&
-                    image.Width <= MaxWidth &&
-                    image.Height <= MaxHeight;
+                    image.Width >= MinSupportedImageWidth
+                    &&
+                    image.Height >= MinSupportedImageHeight;
             }
             catch
             {

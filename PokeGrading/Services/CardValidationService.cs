@@ -1,6 +1,6 @@
 // Servicio: concentra logica de negocio y soporte para CardValidationService.
 using PokeGrading.Data_input_models;
-using PokeGrading.Utilities;
+using SixLabors.ImageSharp;
 
 namespace PokeGrading.Services
 {
@@ -9,6 +9,8 @@ namespace PokeGrading.Services
     /// </summary>
     public class CardValidationService : ICardValidationService
     {
+        private const int MinimumImageWidth = 600;
+        private const int MinimumImageHeight = 600;
         private const int MinimumHpValue = 0;
 
         private const int MaxCardNameLength = 150;
@@ -55,18 +57,28 @@ namespace PokeGrading.Services
             };
 
         /// <summary>
-        /// Valida que los datos de alta de carta cumplan reglas mínimas requeridas.
+        /// Valida que los datos de alta de carta cumplan reglas minimas requeridas.
         /// </summary>
-        public string? ValidateCreateCardInput(
-            Data_input_add_card input)
+        public string? ValidateCreateCardInput(Data_input_add_card input)
         {
-            //----------------------------------------------------
-            // Campos obligatorios
-            //----------------------------------------------------
-
             if (string.IsNullOrWhiteSpace(input.card_name))
             {
                 return "Card name required";
+            }
+
+            if (input.card_name.Length > MaxCardNameLength)
+            {
+                return $"Card name must not exceed {MaxCardNameLength} characters";
+            }
+
+            if (!string.IsNullOrWhiteSpace(input.set_name) && input.set_name.Length > MaxSetNameLength)
+            {
+                return $"Set name must not exceed {MaxSetNameLength} characters";
+            }
+
+            if (!string.IsNullOrWhiteSpace(input.illustrator) && input.illustrator.Length > MaxIllustratorLength)
+            {
+                return $"Illustrator must not exceed {MaxIllustratorLength} characters";
             }
 
             if (string.IsNullOrWhiteSpace(input.set_name))
@@ -94,49 +106,24 @@ namespace PokeGrading.Services
                 return "Finish type required";
             }
 
-            //----------------------------------------------------
-            // Longitudes
-            //----------------------------------------------------
-
-            if (input.card_name.Length > MaxCardNameLength)
-            {
-                return $"Card name must not exceed {MaxCardNameLength} characters";
-            }
-
-            if (input.set_name.Length > MaxSetNameLength)
-            {
-                return $"Set name must not exceed {MaxSetNameLength} characters";
-            }
-
-            if (!string.IsNullOrWhiteSpace(input.illustrator) &&
-                input.illustrator.Length > MaxIllustratorLength)
-            {
-                return $"Illustrator must not exceed {MaxIllustratorLength} characters";
-            }
-
-            //----------------------------------------------------
-            // Imagen
-            //----------------------------------------------------
-
             if (input.front_image == null)
             {
                 return "Front image required";
             }
 
-            if (!ImageValidationService.IsValidImage(input.front_image))
+            try
             {
-                return "Invalid front image";
-            }
+                using var image = Image.Load(input.front_image.OpenReadStream());
 
-            if (input.back_image != null &&
-                !ImageValidationService.IsValidImage(input.back_image))
+                if (image.Width < MinimumImageWidth || image.Height < MinimumImageHeight)
+                {
+                    return "Image resolution too low";
+                }
+            }
+            catch (Exception)
             {
-                return "Invalid back image";
+                return "Invalid image file";
             }
-
-            //----------------------------------------------------
-            // Catálogos
-            //----------------------------------------------------
 
             if (!ValidTypes.Contains(input.pokemon_type))
             {
@@ -153,18 +140,10 @@ namespace PokeGrading.Services
                 return "Invalid language";
             }
 
-            //----------------------------------------------------
-            // Valores numéricos
-            //----------------------------------------------------
-
             if (input.hp <= MinimumHpValue)
             {
                 return "HP must be greater than zero";
             }
-
-            //----------------------------------------------------
-            // Todo correcto
-            //----------------------------------------------------
 
             return null;
         }
